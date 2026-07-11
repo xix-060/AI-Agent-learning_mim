@@ -1,10 +1,10 @@
 # AI-Agent-learning\_mim
 
-# AI Agent 学习仓库
+## AI Agent 学习仓库
 
 > 个⼈ AI Agent ⼊⾏学习记录，按 12 周计划推进。
 
-\## 🚀 快速开始
+## 🚀 快速开始
 
 ```bash
 
@@ -21,4 +21,7 @@ cp .env.example .env
 # 编辑 .env 填⼊你的 API Key
 
 # 4. 运⾏
-python hello\_llm.py
+python hello_llm.py
+
+## 🎬 运行演示视频
+结果展示视频：https://www.bilibili.com/video/BV1cLNA6tEhg/?vd_source=2b0d152e167a850719670c04905ef01e
