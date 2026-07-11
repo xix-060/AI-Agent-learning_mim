@@ -1,10 +1,10 @@
 # AI-Agent-learning\_mim
 
-# AI Agent 学习仓库
+\ AI Agent 学习仓库
 
 > 个⼈ AI Agent ⼊⾏学习记录，按 12 周计划推进。
 
-\# 🚀 快速开始
+\ 🚀 快速开始
 
 ```bash
 
