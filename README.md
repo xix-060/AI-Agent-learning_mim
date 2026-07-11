@@ -4,7 +4,7 @@
 
 > 个⼈ AI Agent ⼊⾏学习记录，按 12 周计划推进。
 
-\## 🚀 快速开始
+\# 🚀 快速开始
 
 ```bash
 
@@ -21,4 +21,4 @@ cp .env.example .env
 # 编辑 .env 填⼊你的 API Key
 
 # 4. 运⾏
-python hello\_llm.py
+python hello_llm.py
