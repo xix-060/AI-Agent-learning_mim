@@ -1,0 +1,31 @@
+﻿🤖 本地⼤模型对话（输⼊ quit 退出）
+==================================================
+📦 正在加载模型 Qwen/Qwen2.5-0.5B-Instruct...
+💻 使⽤设备: cpu
+C:\Users\86151\.conda\envs\ai-agent\python.exe : Traceback (most recent call last):
+At line:15 char:6198
++ ... pgrep\bin'; C:\Users\86151\.conda\envs\ai-agent\python.exe e:\git\AI- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  File "e:\git\AI-Agent-learning_mim\src\chat_local.py", line 105, in <module>
+    main()
+  File "e:\git\AI-Agent-learning_mim\src\chat_local.py", line 92, in main
+    model = LocalChatModel()
+            ^^^^^^^^^^^^^^^^
+  File "e:\git\AI-Agent-learning_mim\src\chat_local.py", line 24, in __init__
+    self.model = AutoModelForCausalLM.from_pretrained(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86151\.conda\envs\ai-agent\Lib\site-packages\transformers\models\auto\auto_factory.py", line 402, in f
+rom_pretrained
+    return model_class.from_pretrained(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86151\.conda\envs\ai-agent\Lib\site-packages\transformers\modeling_utils.py", line 4267, in from_pretr
+ained
+    checkpoint_files, sharded_metadata = _get_resolved_checkpoint_files(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86151\.conda\envs\ai-agent\Lib\site-packages\transformers\modeling_utils.py", line 751, in _get_resolv
+ed_checkpoint_files
+    raise OSError(
+OSError: Qwen/Qwen2.5-0.5B-Instruct does not appear to have a file named pytorch_model.bin or model.safetensors.

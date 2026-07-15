@@ -222,3 +222,11 @@ data/
 __pycache__/
 *.pyc
 .venv/
+
+
+# 本地模型缓存目录
+qwen2.5-0.5b/
+*.bin
+*.safetensors
+*.pt
+*.pth

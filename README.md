@@ -27,4 +27,3 @@ python hello_llm.py
 
 ## 🎬 运行演示视频
 结果展示视频：https://www.bilibili.com/video/BV1cLNA6tEhg/?vd_source=2b0d152e167a850719670c04905ef01e
-
