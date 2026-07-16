@@ -6,12 +6,12 @@ from src.chat_local import LocalChatModel
 
 @pytest.fixture(scope="module")
 def model():
-    """所有测试共享⼀个模型实例（避免重复加载）"""
+    """所有测试共享一个模型实例（避免重复加载）"""
     return LocalChatModel()
 
 
 def test_single_turn(model):
-    response, history = model.chat("1+1等于⼏？")
+    response, history = model.chat("1+1等于几？")
     assert isinstance(response, str)
     assert len(response) > 0
     assert "2" in response

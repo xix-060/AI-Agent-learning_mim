@@ -1,4 +1,4 @@
-"""utils ⼯具函数的单元测试"""
+"""utils 工具函数的单元测试"""
 
 from src.utils import (
     truncate_text,

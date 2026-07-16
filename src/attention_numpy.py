@@ -1,4 +1,4 @@
-"""⽤ numpy 从零实现 Scaled Dot-Product Attention"""
+"""用 numpy 从零实现 Scaled Dot-Product Attention"""
 
 import numpy as np
 
@@ -20,15 +20,15 @@ def scaled_dot_product_attention(
         K: (seq_len, d_k) 键矩阵
         V: (seq_len, d_v) 值矩阵
     返回：
-        output: (seq_len, d_v) 注意⼒输出
-        weights: (seq_len, seq_len) 注意⼒权重
+        output: (seq_len, d_v) 注意力输出
+        weights: (seq_len, seq_len) 注意力权重
     """
     d_k = K.shape[-1]
     # 1. 计算点积 QK^T
     scores = Q @ K.T  # (seq_len, seq_len)
     # 2. 缩放（除以 √d_k）
     scaled_scores = scores / np.sqrt(d_k)
-    # 3. softmax 归⼀化
+    # 3. softmax 归一化
     weights = softmax(scaled_scores, axis=-1)
     # 4. 加权求和
     output = weights @ V  # (seq_len, d_v)
@@ -59,7 +59,7 @@ def multi_head_attention(
     K = K.reshape(seq_len, num_heads, d_k).transpose(1, 0, 2)
     V = V.reshape(seq_len, num_heads, d_k).transpose(1, 0, 2)
 
-    # 3. 每个头独⽴做 attention
+    # 3. 每个头独立做 attention
     outputs = []
     for i in range(num_heads):
         out, _ = scaled_dot_product_attention(Q[i], K[i], V[i])
@@ -72,13 +72,13 @@ def multi_head_attention(
     return concat @ W_O
 
 
-# ========== 演⽰ ==========
+# ========== 演示 ==========
 if __name__ == "__main__":
     np.random.seed(42)
     seq_len, d_model, num_heads = 4, 8, 2
     d_k = d_model // num_heads  # 4
 
-    # 模拟输⼊（4 个 token，每个 8 维）
+    # 模拟输入（4 个 token，每个 8 维）
     x = np.random.randn(seq_len, d_model)
 
     # 随机初始化权重矩阵
@@ -93,9 +93,9 @@ if __name__ == "__main__":
     V = x @ W_V[:, :d_k]
     output, weights = scaled_dot_product_attention(Q, K, V)
     print("单头 Attention 输出形状:", output.shape)
-    print("注意⼒权重矩阵 (4x4):")
+    print("注意力权重矩阵 (4x4):")
     print(weights.round(3))
-    print("每⾏和为 1（softmax 保证）:", weights.sum(axis=-1).round(3))
+    print("每行和为 1（softmax 保证）:", weights.sum(axis=-1).round(3))
 
     # 多头 attention
     multi_output = multi_head_attention(x, W_Q, W_K, W_V, W_O, num_heads)

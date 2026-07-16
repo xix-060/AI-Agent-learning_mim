@@ -1,5 +1,5 @@
 #!/bin/bash
-# ⼀键配置开发环境
+# 一键配置开发环境
 set -e echo " 创建 Conda 环境 ai-agent (Python 3.11)..."
 conda create -n ai-agent python=3.11 -y
 echo " 安装依赖..."

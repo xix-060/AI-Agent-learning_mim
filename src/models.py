@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 class RoleEnum(str, Enum):
-    """对话⻆⾊"""
+    """对话⻆色"""
 
     SYSTEM = "system"
     USER = "user"
@@ -24,7 +24,7 @@ class Message(BaseModel):
     @classmethod
     def content_not_blank(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("content 不能为空⽩")
+            raise ValueError("content 不能为空白")
         return v
 
 

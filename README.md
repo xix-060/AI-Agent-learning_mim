@@ -2,7 +2,7 @@
 
 ## AI Agent 学习仓库
 
-> 个⼈ AI Agent ⼊⾏学习记录，按 12 周计划推进。
+> 个人 AI Agent 入行学习记录，按 12 周计划推进。
 
 ## 🚀 快速开始
 
@@ -18,9 +18,9 @@ conda activate ai-agent
 
 # 3. 配置 API Key
 cp .env.example .env
-# 编辑 .env 填⼊你的 API Key
+# 编辑 .env 填入你的 API Key
 
-# 4. 运⾏
+# 4. 运行
 python hello_llm.py
 
 '''bash

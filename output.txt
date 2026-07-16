@@ -1,7 +1,7 @@
-﻿🤖 本地⼤模型对话（输⼊ quit 退出）
+﻿🤖 本地大模型对话（输入 quit 退出）
 ==================================================
 📦 正在加载模型 Qwen/Qwen2.5-0.5B-Instruct...
-💻 使⽤设备: cpu
+💻 使用设备: cpu
 C:\Users\86151\.conda\envs\ai-agent\python.exe : Traceback (most recent call last):
 At line:15 char:6198
 + ... pgrep\bin'; C:\Users\86151\.conda\envs\ai-agent\python.exe e:\git\AI- ...

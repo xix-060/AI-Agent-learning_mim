@@ -1,4 +1,4 @@
-"""LLM 客⼾端封装 - 第 1 周核⼼产出"""
+"""LLM 客户端封装 - 第 1 周核心产出"""
 
 import os
 import time
@@ -10,7 +10,7 @@ load_dotenv()
 
 
 class LLMClient:
-    """LLM 客⼾端：封装 OpenAI 兼容接⼝"""
+    """LLM 客户端：封装 OpenAI 兼容接口"""
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class LLMClient:
         )
 
     def simple_chat(
-        self, user_input: str, system_prompt: str = "你是⼀个有⽤的助⼿"
+        self, user_input: str, system_prompt: str = "你是一个有用的助手"
     ) -> str:
         """简化的单轮对话"""
         messages = [
