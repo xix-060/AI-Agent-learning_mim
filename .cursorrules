@@ -1,0 +1,27 @@
+# 项⽬规则
+
+## 项⽬概述
+这是⼀个 AI Agent 学习仓库，使⽤ Python 3.11。
+
+## 代码规范
+- 使⽤类型注解（typing）
+- 使⽤ pydantic 做数据校验
+- 所有函数必须有 docstring
+- 测试⽤ pytest，放在 tests/ ⽬录
+- ⾏宽 100 字符
+
+## ⽬录结构
+- src/ - 源代码
+- tests/ - 单元测试
+- docs/ - ⽂档笔记
+- notebooks/ - Jupyter Notebook
+- data/ - 数据⽂件
+
+## 命名规范
+- ⽂件：snake_case.py
+- 类：PascalCase
+- 函数/变量：snake_case
+- 常量：UPPER_SNAKE_CASE
+
+## 提交规范
+使⽤ Conventional Commits：feat / fix / docs / refactor / test
