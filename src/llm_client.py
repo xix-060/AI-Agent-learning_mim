@@ -28,7 +28,11 @@ class LLMClient:
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
 
     def chat(
-        self, messages: list[Message], temperature: float = 0.7, max_tokens: int = 2048
+        self,
+        messages: list[Message],
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        top_p: float | None = None,
     ) -> ChatResponse:
         """发送对话请求"""
         start = time.time()
@@ -36,12 +40,16 @@ class LLMClient:
         # 转换为 API 格式
         api_messages = [{"role": m.role.value, "content": m.content} for m in messages]
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=api_messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        create_kwargs = {
+            "model": self.model,
+            "messages": api_messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        if top_p is not None:
+            create_kwargs["top_p"] = top_p
+
+        response = self.client.chat.completions.create(**create_kwargs)
 
         elapsed = time.time() - start
         return ChatResponse(

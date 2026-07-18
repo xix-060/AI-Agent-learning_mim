@@ -95,12 +95,19 @@ def main():
         "创意": "写一句关于月亮的诗",
         "事实": "中国的首都是哪里？",
     }
+    prompt_results = {}
     for name, p in prompts.items():
         print(f"\n Prompt 类型: {name}")
-        run_experiment(client, p, "temperature", [0.0, 0.7, 1.2], num_runs=5)
+        prompt_results[name] = run_experiment(
+            client, p, "temperature", [0.0, 0.7, 1.2], num_runs=5
+        )
 
     # 保存结果
-    all_results = {"temperature": temp_results, "top_p": topp_results}
+    all_results = {
+        "temperature": temp_results,
+        "top_p": topp_results,
+        "prompt_types": prompt_results,
+    }
     with open("docs/sampling-experiment-results.json", "w", encoding="utf-8") as f:
         json.dump(all_results, f, ensure_ascii=False, indent=2)
 

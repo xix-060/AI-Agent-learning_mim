@@ -17,7 +17,7 @@ class Message(BaseModel):
     """单条对话消息"""
 
     role: RoleEnum
-    content: str = Field(..., min_length=1, max_length=10000)
+    content: str = Field(..., min_length=1, max_length=100000)
     timestamp: datetime = Field(default_factory=datetime.now)
 
     @field_validator("content")
