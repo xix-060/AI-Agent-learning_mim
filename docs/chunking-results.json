@@ -1,0 +1,50 @@
+[
+  {
+    "config": "fixed-200",
+    "num_chunks": 6,
+    "avg_chunk_length": 192.83333333333334,
+    "retrieval_accuracy": 1.0,
+    "correct": 5,
+    "total": 5
+  },
+  {
+    "config": "fixed-500",
+    "num_chunks": 3,
+    "avg_chunk_length": 385.6666666666667,
+    "retrieval_accuracy": 1.0,
+    "correct": 5,
+    "total": 5
+  },
+  {
+    "config": "fixed-1000",
+    "num_chunks": 2,
+    "avg_chunk_length": 578.5,
+    "retrieval_accuracy": 1.0,
+    "correct": 5,
+    "total": 5
+  },
+  {
+    "config": "sentence-3",
+    "num_chunks": 8,
+    "avg_chunk_length": 130.375,
+    "retrieval_accuracy": 0.8,
+    "correct": 4,
+    "total": 5
+  },
+  {
+    "config": "sentence-5",
+    "num_chunks": 5,
+    "avg_chunk_length": 208.6,
+    "retrieval_accuracy": 0.8,
+    "correct": 4,
+    "total": 5
+  },
+  {
+    "config": "paragraph",
+    "num_chunks": 8,
+    "avg_chunk_length": 130.375,
+    "retrieval_accuracy": 1.0,
+    "correct": 5,
+    "total": 5
+  }
+]
