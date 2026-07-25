@@ -1,0 +1,38 @@
+{
+  "total": 5,
+  "answer_relevancy": 1.0,
+  "context_precision": 1.0,
+  "faithfulness": 1.0,
+  "details": [
+    {
+      "question": "AI 经历了几次浪潮？",
+      "answer_relevant": true,
+      "context_hit": true,
+      "faithfulness": 1.0
+    },
+    {
+      "question": "谁提出了图灵测试？",
+      "answer_relevant": true,
+      "context_hit": true,
+      "faithfulness": 1.0
+    },
+    {
+      "question": "Transformer 是哪一年提出的？",
+      "answer_relevant": true,
+      "context_hit": true,
+      "faithfulness": 1.0
+    },
+    {
+      "question": "Agent 的四个核心组件是什么？",
+      "answer_relevant": true,
+      "context_hit": true,
+      "faithfulness": 1.0
+    },
+    {
+      "question": "MCP 是哪个公司提出的？",
+      "answer_relevant": true,
+      "context_hit": true,
+      "faithfulness": 1.0
+    }
+  ]
+}
