@@ -183,6 +183,9 @@ def main():
     # 3. 评估
     print("\n📊 运行评估...")
 
+    # 先做手动评估，用于后续对比
+    manual_result = manual_evaluation(dataset)
+
     # 尝试用 RAGAS
     try:
         ragas_result = evaluate_with_ragas(dataset)
@@ -207,7 +210,6 @@ def main():
 
     except ImportError:
         print("\n⚠️ RAGAS 未安装，使用手动评估")
-        manual_result = manual_evaluation(dataset)
         print("\n📋 手动评估结果：")
         print(f"   Answer Relevancy: {manual_result['answer_relevancy']:.3f}")
         print(f"   Context Precision: {manual_result['context_precision']:.3f}")
@@ -221,7 +223,6 @@ def main():
 
     except Exception as e:
         print(f"\n⚠️ RAGAS 评估失败（{e}），使用手动评估")
-        manual_result = manual_evaluation(dataset)
         print("\n📋 手动评估结果：")
         print(f"   Answer Relevancy: {manual_result['answer_relevancy']:.3f}")
         print(f"   Context Precision: {manual_result['context_precision']:.3f}")
@@ -236,9 +237,71 @@ def main():
     # 4. 达标检查
     print("\n" + "=" * 60)
     if faithfulness_score >= 0.85:
-        print(f"🎉 恭喜！faithfulness = {faithfulness_score:.3f} ≥ 0.85，达标！")
+        print(
+            f"🎉 恭喜！Naive RAG faithfulness = {faithfulness_score:.3f} ≥ 0.85，达标！"
+        )
     else:
-        print(f"⚠️ faithfulness = {faithfulness_score:.3f} < 0.85，需要优化")
+        print(f"⚠️ Naive RAG faithfulness = {faithfulness_score:.3f} < 0.85，需要优化")
+
+    # 5. Advanced RAG 对比评估
+    print("\n" + "=" * 60)
+    print("📊 Advanced RAG 对比评估")
+    print("=" * 60)
+
+    from src.advanced_rag import AdvancedRAG
+
+    print("\n📝 生成 Advanced RAG 回答...")
+    advanced = AdvancedRAG(embedder, llm, rag)
+    advanced_dataset = [d.copy() for d in EVAL_DATASET]
+    for item in advanced_dataset:
+        result = advanced.query_with_rewrite(item["question"])
+        item["contexts"] = [doc["content"] for doc in result["retrieved_docs"]]
+        item["answer"] = result["answer"]
+        print(f"  Q: {item['question']}")
+        print(f"  A: {item['answer'][:100]}...")
+        print()
+
+    # 评估 Advanced RAG
+    print("\n📊 评估 Advanced RAG...")
+    advanced_result = manual_evaluation(advanced_dataset)
+    print(f"  Answer Relevancy: {advanced_result['answer_relevancy']:.3f}")
+    print(f"  Context Precision: {advanced_result['context_precision']:.3f}")
+    print(f"  Faithfulness: {advanced_result['faithfulness']:.3f}")
+
+    # 保存 Advanced RAG 结果
+    with open("docs/rag-advanced-eval.json", "w", encoding="utf-8") as f:
+        json.dump(advanced_result, f, ensure_ascii=False, indent=2)
+
+    # 6. 对比结果
+    print("\n" + "=" * 60)
+    print("📈 Naive vs Advanced RAG 对比")
+    print("=" * 60)
+
+    naive_score = faithfulness_score
+    advanced_score = advanced_result["faithfulness"]
+
+    print(f"\n  {'指标':<20} {'Naive':<10} {'Advanced':<10} {'提升':<10}")
+    print(f"  {'-'*50}")
+    print(
+        f"  {'Faithfulness':<20} {naive_score:<10.3f} {advanced_score:<10.3f} {advanced_score-naive_score:+.3f}"
+    )
+    print(
+        f"  {'Answer Rel':<20} {manual_result['answer_relevancy']:<10.3f} {advanced_result['answer_relevancy']:<10.3f} {advanced_result['answer_relevancy']-manual_result['answer_relevancy']:+.3f}"
+    )
+    print(
+        f"  {'Context Prec':<20} {manual_result['context_precision']:<10.3f} {advanced_result['context_precision']:<10.3f} {advanced_result['context_precision']-manual_result['context_precision']:+.3f}"
+    )
+
+    if advanced_score > naive_score:
+        print(
+            f"\n  🎉 Advanced RAG 在 Faithfulness 上提升了 {(advanced_score-naive_score)*100:.1f}%"
+        )
+    elif advanced_score < naive_score:
+        print(
+            f"\n  ⚠️ Advanced RAG 在 Faithfulness 上下降了 {(naive_score-advanced_score)*100:.1f}%"
+        )
+    else:
+        print("\n  📊 两者在 Faithfulness 上持平")
 
 
 if __name__ == "__main__":
