@@ -16,12 +16,27 @@ from src.vector_rag import ChromaRAG
 class AdvancedRAG:
     """高级 RAG 系统"""
 
-    def __init__(self, embedder: Embedder, llm: LLMClient, rag: ChromaRAG):
+    def __init__(
+        self,
+        embedder: Embedder,
+        llm: LLMClient,
+        rag: ChromaRAG,
+        retrieve_top_k: int = 10,
+    ):
         self.embedder = embedder
         self.llm = llm
         self.rag = rag
-        # 扩大初始召回，给 Reranker 留空间
-        self.rag.top_k = 10
+        # 使用独立的 top_k，不修改传入对象
+        self.retrieve_top_k = retrieve_top_k
+
+    def _retrieve(self, query: str) -> list[dict]:
+        """检索方法，临时修改 top_k 后恢复"""
+        original_top_k = self.rag.top_k
+        self.rag.top_k = self.retrieve_top_k
+        try:
+            return self.rag.retrieve(query)
+        finally:
+            self.rag.top_k = original_top_k
 
     # ========== Query 改写 ==========
 
@@ -66,10 +81,11 @@ class AdvancedRAG:
         if len(documents) <= top_k:
             return documents
 
-        # 构造排序 prompt
-        docs_text = "\n".join(
+        # 构造排序 prompt（使用 list comprehension 避免 IDE 误报）
+        docs_list = [
             f"[{i+1}] {doc['content'][:200]}" for i, doc in enumerate(documents)
-        )
+        ]
+        docs_text = "\n".join(docs_list)
 
         prompt = f"""请根据与问题的相关性，对以下文档排序。只输出排序后的文档编号，用逗号分隔，如：3,1,4,2,5
 
@@ -105,8 +121,8 @@ class AdvancedRAG:
         rewritten = self.rewrite_query(question)
         print(f"  📝 改写：{question} → {rewritten}")
 
-        # 2. 检索
-        retrieved = self.rag.retrieve(rewritten)
+        # 2. 检索（临时扩大召回）
+        retrieved = self._retrieve(rewritten)
 
         # 3. Rerank
         reranked = self.rerank(rewritten, retrieved, top_k=3)
@@ -127,8 +143,8 @@ class AdvancedRAG:
         hyde_doc = self.hyde_generate(question)
         print(f"  🔮 HyDE：{hyde_doc[:100]}...")
 
-        # 2. 用假设文档检索
-        retrieved = self.rag.retrieve(hyde_doc)
+        # 2. 用假设文档检索（临时扩大召回）
+        retrieved = self._retrieve(hyde_doc)
 
         # 3. Rerank
         reranked = self.rerank(question, retrieved, top_k=3)
@@ -149,10 +165,10 @@ class AdvancedRAG:
         queries = self.multi_query(question, n=3)
         print(f"  🌐 Multi-Query: {queries}")
 
-        # 2. 分别检索
+        # 2. 分别检索（每次都临时扩大召回）
         all_docs = []
         for q in queries:
-            docs = self.rag.retrieve(q)
+            docs = self._retrieve(q)
             all_docs.extend(docs)
 
         # 3. 去重（按内容）
