@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "my-tools": {
+      "command": "C:/Users/86151/.conda/envs/ai-agent/python.exe",
+      "args": ["E:/git/AI-Agent-learning_mim/src/mcp_server.py"]
+    }
+  }
+}

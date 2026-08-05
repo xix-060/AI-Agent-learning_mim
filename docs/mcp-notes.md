@@ -15,13 +15,17 @@ MCP 是 Anthropic 在 2024 年 11 月提出的开放协议，
 
 ## 3. MCP 架构
 
+```
 MCP Host（如 Claude Desktop）
-↓ MCP Protocol
+    ↓ MCP Protocol
 MCP Client
-↓
+    ↓
 MCP Server（你写的工具）
-↓
+    ↓
 本地资源（文件/数据库/API）
+```
+
+<br />
 
 ## 4. MCP 三大能力
 
@@ -37,7 +41,7 @@ MCP Server（你写的工具）
 
 ## 6. 简单 MCP Server 示例（伪代码）
 
-```python
+```Python
 from mcp import Server, Tool
 
 server = Server("my-tools")
@@ -49,3 +53,30 @@ def get_weather(city: str) -> str:
 
 server.run()  # 启动 MCP 服务
 ```
+
+## MCP Server 实战总结
+
+### 架构
+
+```
+MCP Host (Claude/Cursor)
+    ↓ stdio/SSE
+MCP Client (内置)
+    ↓ MCP Protocol
+MCP Server (你的 mcp_server.py)
+    ↓
+工具执行
+```
+
+### 关键点
+
+1. Server 通过 stdio 通信（标准输入输出）
+2. 两个核心回调：list\_tools() 和 call\_tool()
+3. 工具用 JSON Schema 描述参数
+4. 返回 TextContent（也可以返回图片等）
+
+### 部署方式
+
+1. 本地 stdio（今天实现）
+2. 远程 SSE（生产用）
+3. Docker 容器化
