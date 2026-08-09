@@ -1,0 +1,27 @@
+# 知识库 Agent 依赖
+
+# LangChain 核心
+langchain-core>=0.2.0
+langchain>=0.2.0
+langchain-openai>=0.1.0
+langchain-text-splitters>=0.2.0
+
+# LangGraph
+langgraph>=0.2.0
+
+# 向量数据库
+langchain-chroma>=0.1.0
+chromadb>=0.5.0
+
+# PDF 文档加载
+pypdf>=4.0.0
+
+# 网页抓取
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# 环境变量
+python-dotenv>=1.0.0
+
+# 数据处理
+pandas>=2.0.0
