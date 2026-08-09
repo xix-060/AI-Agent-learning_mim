@@ -219,6 +219,13 @@ __marimo__/
 
 .env
 data/
+# 放行 knowledge_agent/data/ 下的测试文档（demo.py / eval.py 依赖）
+!knowledge_agent/data/
+knowledge_agent/data/*
+!knowledge_agent/data/ai_agent.pdf
+!knowledge_agent/data/vector_db.txt
+!knowledge_agent/data/prompt_engineering.md
+!knowledge_agent/data/sample.txt
 __pycache__/
 *.pyc
 .venv/
