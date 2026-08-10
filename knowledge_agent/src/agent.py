@@ -6,6 +6,7 @@
                              └─ END
 """
 
+import re
 from typing import TypedDict, Annotated, Sequence, Literal
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -37,7 +38,11 @@ SYSTEM_PROMPT = """你是一个智能知识库助手。你可以回答问题、�
 ## 回答风格
 - 简洁明了，使用中文
 - 不确定时诚实告知
-- 适当使用列表格式"""
+- 适当使用列表格式
+
+## 用户信息
+- 系统会提供已知用户信息（长期记忆），回答时请使用
+- 用户告知的个人信息（如名字、偏好）会被自动记住"""
 
 
 class AgentState(TypedDict):
@@ -105,7 +110,7 @@ class KnowledgeAgent:
 
         # 注入系统提示
         if not messages or not isinstance(messages[0], SystemMessage):
-            messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
+            messages = [SystemMessage(content=self._build_system_prompt())] + messages
 
         # 注入 RAG 上下文（如果用户问的是知识性问题）
         rag_context = self._maybe_retrieve_rag(messages)
@@ -157,9 +162,38 @@ class KnowledgeAgent:
 
         return "\n".join(parts)
 
+    def _build_system_prompt(self) -> str:
+        """构建系统提示，注入长期记忆中的已知用户信息"""
+        prompt = SYSTEM_PROMPT
+        try:
+            facts = self.memory.long_term.get_all()
+        except Exception:
+            facts = []
+        if facts:
+            lines = [f"- {item['key']}: {item['value']}" for item in facts]
+            prompt += "\n\n## 已知用户信息（长期记忆）\n" + "\n".join(lines)
+        return prompt
+
+    def _maybe_remember(self, user_input: str) -> None:
+        """从用户输入中识别需要长期记忆的关键信息（如名字）"""
+        patterns = [
+            r"我叫\s*([^\s,，。.!！?？]+)",
+            r"我的名字(?:是|叫)\s*([^\s,，。.!！?？]+)",
+            r"名字叫\s*([^\s,，。.!！?？]+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, user_input)
+            if match:
+                name = match.group(1).strip()
+                if name and len(name) <= 20:
+                    self.memory.remember("name", name, {"source": "user_input"})
+                break
+
     def chat(self, user_input: str, thread_id: str = "default") -> str:
         """对话"""
         self.memory.add_user_message(user_input)
+        # 识别并存储长期记忆（如用户名字）
+        self._maybe_remember(user_input)
 
         config = {"configurable": {"thread_id": thread_id}}
         initial_state = {"messages": [HumanMessage(content=user_input)]}
