@@ -22,8 +22,10 @@ cp .env.example .env
 
 # 4. 运行
 python hello_llm.py
+```
 
-'''bash
+## 运行演示视频
 
-## 🎬 运行演示视频
-结果展示视频：https://www.bilibili.com/video/BV1cLNA6tEhg/?vd_source=2b0d152e167a850719670c04905ef01e
+结果展示视频:
+
+<https://www.bilibili.com/video/BV1cLNA6tEhg/?vd_source=2b0d152e167a850719670c04905ef01e>
