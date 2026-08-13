@@ -10,7 +10,7 @@ import re
 from typing import TypedDict, Annotated, Sequence, Literal
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
@@ -90,7 +90,7 @@ class KnowledgeAgent:
         workflow.add_node("tools", self._tools_node)
 
         # 入口
-        workflow.set_entry_point("agent")
+        workflow.add_edge(START, "agent")
 
         # 条件边：判断是否需要调用工具
         workflow.add_conditional_edges(
