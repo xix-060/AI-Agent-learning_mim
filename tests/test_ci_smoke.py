@@ -1,9 +1,9 @@
-"""CI 冒烟测试：故意失败，用于演示 GitHub Actions 红灯→绿灯流程。
+"""CI 冒烟测试：验证 pytest 能正常收集并运行。
 
-提交后会触发 CI 失败（红灯），修复后恢复绿色。
+曾用于演示 GitHub Actions 红灯→绿灯流程（故意写错等式触发失败，现已修复）。
 """
 
 
-def test_will_fail_demo_red_light():
-    """故意失败的断言：演示 CI 红灯流程。"""
-    assert 1 + 1 == 3, "演示用：故意写错等式触发 CI 失败"
+def test_ci_smoke_passing():
+    """冒烟测试：基础断言通过，确认 CI 环境正常。"""
+    assert 1 + 1 == 2, "基础算术应成立"
