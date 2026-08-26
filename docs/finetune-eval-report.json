@@ -1,0 +1,37 @@
+{
+  "avg_base_coverage": 0.27999999999999997,
+  "avg_ft_coverage": 0.49000000000000005,
+  "improvement": 0.21000000000000008,
+  "details": [
+    {
+      "question": "判断情感：这家餐厅太好吃了",
+      "base_coverage": 1.0,
+      "ft_coverage": 1.0,
+      "improvement": 0.0
+    },
+    {
+      "question": "判断情感：质量太差了",
+      "base_coverage": 0.0,
+      "ft_coverage": 1.0,
+      "improvement": 1.0
+    },
+    {
+      "question": "判断情感：今天气温25度",
+      "base_coverage": 0.0,
+      "ft_coverage": 0.0,
+      "improvement": 0.0
+    },
+    {
+      "question": "什么是 AI Agent？",
+      "base_coverage": 0.4,
+      "ft_coverage": 0.2,
+      "improvement": -0.2
+    },
+    {
+      "question": "LoRA 是什么？",
+      "base_coverage": 0.0,
+      "ft_coverage": 0.25,
+      "improvement": 0.25
+    }
+  ]
+}

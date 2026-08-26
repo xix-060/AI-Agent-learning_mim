@@ -1,12 +1,17 @@
 """DPO 偏好对齐训练"""
 
-import json
-import torch
-from datasets import Dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import LoraConfig
-from trl import DPOTrainer, DPOConfig
-from dotenv import load_dotenv
+import os
+
+# Hugging Face 国内镜像（必须在 import transformers/datasets 前设置）
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+
+import json  # noqa: E402
+import torch  # noqa: E402
+from datasets import Dataset  # noqa: E402
+from transformers import AutoTokenizer, AutoModelForCausalLM  # noqa: E402
+from peft import LoraConfig  # noqa: E402
+from trl import DPOTrainer, DPOConfig  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv()
 
@@ -74,7 +79,8 @@ def train_dpo():
         logging_steps=2,
         save_strategy="epoch",
         max_length=512,
-        max_prompt_length=256,
+        use_cpu=True,  # 纯 CPU 训练必须显式声明（transformers 5.x 校验）
+        bf16=False,  # CPU 不用 bf16，强制 fp32
         report_to="none",
     )
 
@@ -103,10 +109,10 @@ def test_dpo():
 
     from peft import PeftModel
 
+    # 不用 device_map="auto"，否则 CPU 上 meta 卸载会和 PEFT 加载 adapter 冲突
     base_model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-        device_map="auto",
         trust_remote_code=True,
     )
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
