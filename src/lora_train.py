@@ -1,17 +1,26 @@
 """LoRA 微调 Qwen2.5-0.5B 做情感分类"""
 
-import json
-import torch
-from datasets import Dataset
-from transformers import (
+import os
+
+# Hugging Face 国内镜像（必须在 import transformers/datasets 前设置）
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+
+import json  # noqa: E402
+import torch  # noqa: E402
+from datasets import Dataset  # noqa: E402
+from transformers import (  # noqa: E402
     AutoTokenizer,
     AutoModelForCausalLM,
 )
-from peft import LoraConfig, get_peft_model, TaskType
-from trl import SFTTrainer, SFTConfig
-from dotenv import load_dotenv
+from peft import LoraConfig, get_peft_model, TaskType  # noqa: E402
+from trl import SFTTrainer, SFTConfig  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+
+from src.logger import get_logger  # noqa: E402
 
 load_dotenv()
+
+logger = get_logger("lora_train")
 
 
 # ========== 配置 ==========
@@ -44,7 +53,7 @@ def load_sft_data(path: str) -> Dataset:
 
 def load_model():
     """加载模型和 tokenizer"""
-    print(f"📦 加载模型 {MODEL_NAME}...")
+    logger.info("加载模型 %s", MODEL_NAME)
 
     tokenizer = AutoTokenizer.from_pretrained(
         MODEL_NAME,
@@ -56,12 +65,12 @@ def load_model():
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
         device_map="auto",
         trust_remote_code=True,
     )
 
-    print(f"✅ 模型参数量：{model.num_parameters() / 1e6:.1f}M")
+    logger.info("模型参数量：%.1fM", model.num_parameters() / 1e6)
     return model, tokenizer
 
 
@@ -88,12 +97,27 @@ def create_lora_config():
 # ========== 4. 训练 ==========
 
 
-def train(data_path: str = DATA_PATH, output_dir: str = OUTPUT_DIR):
-    """微调主函数"""
+def train(
+    data_path: str = DATA_PATH,
+    output_dir: str = OUTPUT_DIR,
+    epochs: int = 3,
+    max_samples: int | None = None,
+):
+    """微调主函数
+
+    Args:
+        data_path: 训练数据路径。
+        output_dir: 模型保存目录。
+        epochs: 训练轮数，默认 3。
+        max_samples: 截取的数据条数（冒烟测试用），None 表示用全量。
+    """
     # 1. 加载数据
-    print("📋 加载训练数据...")
+    logger.info("加载训练数据：%s", data_path)
     dataset = load_sft_data(data_path)
-    print(f"  数据量：{len(dataset)}")
+    if max_samples is not None:
+        dataset = dataset.select(range(min(max_samples, len(dataset))))
+        logger.info("冒烟模式：截取 %d 条", len(dataset))
+    logger.info("数据量：%d", len(dataset))
 
     # 2. 加载模型
     model, tokenizer = load_model()
@@ -102,13 +126,13 @@ def train(data_path: str = DATA_PATH, output_dir: str = OUTPUT_DIR):
     lora_config = create_lora_config()
     model = get_peft_model(model, lora_config)
 
-    # 打印可训练参数
+    # 打印可训练参数（PEFT 内部输出，保留）
     model.print_trainable_parameters()
 
     # 4. 训练参数
     training_args = SFTConfig(
         output_dir=output_dir,
-        num_train_epochs=3,
+        num_train_epochs=epochs,
         per_device_train_batch_size=1,  # 内存瘦身：4→1
         gradient_accumulation_steps=16,  # 等效 batch_size=16 不变
         learning_rate=2e-4,
@@ -133,24 +157,24 @@ def train(data_path: str = DATA_PATH, output_dir: str = OUTPUT_DIR):
     )
 
     # 6. 训练
-    print("\n🚀 开始训练...")
+    logger.info("开始训练（%d epoch）", epochs)
     if torch.cuda.is_available():
-        print(f"  GPU: {torch.cuda.get_device_name()}")
-        print(f"  显存: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f}GB")
+        logger.info("GPU: %s", torch.cuda.get_device_name())
+        logger.info("显存: %.1fGB", torch.cuda.get_device_properties(0).total_mem / 1e9)
 
     trainer.train()
 
     # 7. 保存
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
-    print(f"\n✅ 模型已保存到 {output_dir}")
+    logger.info("模型已保存到 %s", output_dir)
 
 
 def train_with_distilled_data():
     """用蒸馏数据微调（领域 SFT）"""
     DISTILLED_DATA_PATH = "data/distilled_dataset.json"
     DISTILLED_OUTPUT_DIR = "data/lora_distilled_output"
-    print("📋 用蒸馏数据微调...")
+    logger.info("用蒸馏数据微调")
     train(data_path=DISTILLED_DATA_PATH, output_dir=DISTILLED_OUTPUT_DIR)
 
 
@@ -215,6 +239,13 @@ if __name__ == "__main__":
         test_model()
     elif len(sys.argv) > 1 and sys.argv[1] == "distill":
         train_with_distilled_data()
+    elif len(sys.argv) > 1 and sys.argv[1] == "smoke":
+        # 冒烟测试：1 epoch + 5 条数据，验证流程与 logger 不跑完整训练
+        train(
+            epochs=1,
+            max_samples=5,
+            output_dir="data/lora_smoke_output",
+        )
     else:
         train()
         test_model()
