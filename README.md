@@ -1,16 +1,15 @@
 # AI-Agent-learning\_mim
 
-## AI Agent 学习仓库
+# AI Agent 学习仓库
 
-> 个人 AI Agent 入行学习记录，按 12 周计划推进。
+> 个人 AI Agent 入行学习记录
 
 ## 🚀 快速开始
 
 ```bash
-
 # 1. 克隆仓库
-git clone https://github.com/xix-060/AI-Agent-learning_mim.git
-cd ai-agent-learning_mim
+git clone https://github.com/<user>/ai-agent-learning.git
+cd ai-agent-learning
 
 # 2. 配置环境
 bash scripts/env.sh

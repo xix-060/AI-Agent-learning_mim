@@ -85,6 +85,73 @@ python main.py chat
 python main.py stats
 ```
 
+## 🌐 API 服务
+
+通过 FastAPI 暴露 HTTP 接口，方便前端或其它客户端调用。
+
+### 启动服务
+
+```bash
+# 在 knowledge_agent/ 目录下执行
+python api.py
+# 或指定 host/port
+uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+启动后访问：
+- 根接口：<http://localhost:8000/>
+- 交互式文档：<http://localhost:8000/docs>
+- 健康检查：<http://localhost:8000/health>
+
+### 接口列表
+
+| 方法     | 路径             | 说明              |
+| ------ | -------------- | --------------- |
+| GET    | `/`            | 服务信息            |
+| GET    | `/health`      | 健康检查            |
+| POST   | `/chat`        | 对话（一次性返回）       |
+| POST   | `/chat/stream` | 对话（SSE 流式返回）    |
+| POST   | `/import`      | 导入文档（传文件路径或 URL） |
+| POST   | `/upload`      | 上传文档并导入         |
+
+### 调用示例
+
+**对话**
+
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "你好", "session_id": "user1"}'
+```
+
+**前端 fetch 调用**
+
+```javascript
+const res = await fetch("http://localhost:8000/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "介绍一下知识库", session_id: "browser" }),
+});
+const data = await res.json();
+console.log(data.response, data.elapsed_seconds);
+```
+
+**流式对话**（Server-Sent Events）
+
+```javascript
+const evt = new EventSource("http://localhost:8000/chat/stream");
+// 注意：EventSource 默认只支持 GET，POST 流式请用 fetch + ReadableStream
+```
+
+**上传文档**
+
+```bash
+curl -X POST http://localhost:8000/upload \
+  -F "file=@./data/uploads/notes.md"
+```
+
+> 响应字段：`response`（回答）、`session_id`、`elapsed_seconds`（耗时）、`tools_used`（使用的工具）。
+
 ## 📁 项目结构
 
 ```
@@ -104,6 +171,7 @@ knowledge_agent/
 │   └── chroma_db/        # 向量库
 ├── .env.example          # 环境变量模板
 ├── requirements.txt
+├── api.py                # API 服务入口（FastAPI）
 └── main.py               # 入口
 ```
 
