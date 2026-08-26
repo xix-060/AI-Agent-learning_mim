@@ -44,6 +44,7 @@ def test_create_task(client: FlaskClient) -> None:
     data = response.get_json()
     assert data["title"] == "学习 Flask"
     assert data["description"] == "完成 Todo 后端"
+    assert data["tags"] == ""
     assert data["completed"] is False
     assert "id" in data
     assert "created_at" in data
@@ -213,4 +214,4 @@ def test_stats(client: FlaskClient) -> None:
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data == {"total": 3, "pending": 2, "completed": 1}
+    assert data == {"total": 3, "pending": 2, "completed": 1, "tag_counts": {}}

@@ -32,14 +32,15 @@ def create_app(db_path: str | Path | None = None) -> Flask:
 
     @app.get("/api/tasks")
     def list_tasks() -> tuple[Any, int]:
-        """获取任务列表，支持按状态筛选。"""
+        """获取任务列表，支持按状态与标签筛选。"""
         status = request.args.get("status", "all")
         if status not in ("all", "pending", "completed"):
             return jsonify(
                 {"error": "status 参数无效，可选 all/pending/completed"}
             ), 400
 
-        tasks = database.list_tasks(status=status)  # type: ignore[arg-type]
+        tag = request.args.get("tag")
+        tasks = database.list_tasks(status=status, tag=tag)  # type: ignore[arg-type]
         return jsonify(tasks), 200
 
     @app.post("/api/tasks")
@@ -48,11 +49,16 @@ def create_app(db_path: str | Path | None = None) -> Flask:
         payload = request.get_json(silent=True) or {}
         title = str(payload.get("title", "")).strip()
         description = str(payload.get("description", "")).strip()
+        tags = payload.get("tags", "")
 
         if not title:
             return jsonify({"error": "title 不能为空"}), 400
 
-        task = database.create_task(title=title, description=description)
+        task = database.create_task(
+            title=title,
+            description=description,
+            tags=tags,
+        )
         return jsonify(task), 201
 
     @app.get("/api/tasks/<int:task_id>")
@@ -78,17 +84,22 @@ def create_app(db_path: str | Path | None = None) -> Flask:
         if "description" in payload:
             description = str(payload["description"]).strip()
 
+        tags: str | list[str] | None = None
+        if "tags" in payload:
+            tags = payload["tags"]
+
         completed: bool | None = None
         if "completed" in payload:
             completed = bool(payload["completed"])
 
-        if title is None and description is None and completed is None:
+        if title is None and description is None and tags is None and completed is None:
             return jsonify({"error": "至少提供一个可更新字段"}), 400
 
         task = database.update_task(
             task_id,
             title=title,
             description=description,
+            tags=tags,
             completed=completed,
         )
         if task is None:
