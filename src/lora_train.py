@@ -88,11 +88,11 @@ def create_lora_config():
 # ========== 4. 训练 ==========
 
 
-def train():
+def train(data_path: str = DATA_PATH, output_dir: str = OUTPUT_DIR):
     """微调主函数"""
     # 1. 加载数据
     print("📋 加载训练数据...")
-    dataset = load_sft_data(DATA_PATH)
+    dataset = load_sft_data(data_path)
     print(f"  数据量：{len(dataset)}")
 
     # 2. 加载模型
@@ -107,17 +107,19 @@ def train():
 
     # 4. 训练参数
     training_args = SFTConfig(
-        output_dir=OUTPUT_DIR,
+        output_dir=output_dir,
         num_train_epochs=3,
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,  # 等效 batch_size=16
+        per_device_train_batch_size=1,  # 内存瘦身：4→1
+        gradient_accumulation_steps=16,  # 等效 batch_size=16 不变
         learning_rate=2e-4,
+        use_cpu=True,  # 纯 CPU 训练必须显式声明（transformers 5.x 校验）
+        bf16=False,  # CPU 不用 bf16，强制 fp32
         logging_steps=5,
         save_strategy="epoch",
         save_total_limit=3,
         warmup_ratio=0.1,
         lr_scheduler_type="cosine",
-        max_seq_length=MAX_SEQ_LENGTH,
+        max_length=MAX_SEQ_LENGTH,  # trl 1.10+ 用 max_length（旧版叫 max_seq_length）
         dataset_text_field="text",
         report_to="none",  # 不上报到 wandb
     )
@@ -139,9 +141,17 @@ def train():
     trainer.train()
 
     # 7. 保存
-    trainer.save_model(OUTPUT_DIR)
-    tokenizer.save_pretrained(OUTPUT_DIR)
-    print(f"\n✅ 模型已保存到 {OUTPUT_DIR}")
+    trainer.save_model(output_dir)
+    tokenizer.save_pretrained(output_dir)
+    print(f"\n✅ 模型已保存到 {output_dir}")
+
+
+def train_with_distilled_data():
+    """用蒸馏数据微调（领域 SFT）"""
+    DISTILLED_DATA_PATH = "data/distilled_dataset.json"
+    DISTILLED_OUTPUT_DIR = "data/lora_distilled_output"
+    print("📋 用蒸馏数据微调...")
+    train(data_path=DISTILLED_DATA_PATH, output_dir=DISTILLED_OUTPUT_DIR)
 
 
 # ========== 5. 测试 ==========
@@ -184,8 +194,7 @@ def test_model():
             outputs = model.generate(
                 **inputs,
                 max_new_tokens=10,
-                temperature=0.0,
-                do_sample=False,
+                do_sample=False,  # 贪心解码，无需 temperature
             )
 
         response = tokenizer.decode(
@@ -205,6 +214,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         test_model()
+    elif len(sys.argv) > 1 and sys.argv[1] == "distill":
+        train_with_distilled_data()
     else:
         train()
         test_model()
