@@ -1,11 +1,13 @@
 """Agent 内置工具集"""
 
+import ast
 import math
-import requests
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
-from dataclasses import dataclass
+from typing import Any, Callable
+
+import requests
 
 
 @dataclass
@@ -20,27 +22,123 @@ class ToolDefinition:
 
 # ========== 工具实现 ==========
 
+# 安全求值白名单：允许的函数与常量（禁止 __builtins__、属性访问、import）
+_SAFE_FUNCS: dict[str, Any] = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
+    "sqrt": math.sqrt,
+    "log": math.log,
+    "log10": math.log10,
+    "pi": math.pi,
+    "e": math.e,
+    "abs": abs,
+    "round": round,
+    "min": min,
+    "max": max,
+    "sum": sum,
+}
+
+# 允许的 AST 节点类型（白名单，其余一律拒绝）；用 tuple 以便 isinstance 直接收
+_ALLOWED_NODE_TYPES: tuple[type, ...] = (
+    ast.Expression,
+    ast.BinOp,
+    ast.UnaryOp,
+    ast.BoolOp,
+    ast.Compare,
+    ast.Constant,
+    ast.Name,
+    ast.Load,
+    ast.Call,
+    ast.Add,
+    ast.Sub,
+    ast.Mult,
+    ast.Div,
+    ast.Mod,
+    ast.Pow,
+    ast.FloorDiv,
+    ast.USub,
+    ast.UAdd,
+    ast.Not,
+    ast.And,
+    ast.Or,
+    ast.Eq,
+    ast.NotEq,
+    ast.Lt,
+    ast.LtE,
+    ast.Gt,
+    ast.GtE,
+    ast.List,
+    ast.Tuple,
+    ast.Set,
+    ast.Load,
+)
+
+
+class _SafeNodeChecker(ast.NodeVisitor):
+    """AST 节点白名单校验器：拒绝属性访问、下标、import、lambda 等危险节点。"""
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:  # noqa: ARG002
+        """拒绝属性访问（防 __class__.__bases__ 等逃逸）。"""
+        raise ValueError("不允许属性访问")
+
+    def visit_Subscript(self, node: ast.Subscript) -> None:  # noqa: ARG002
+        """拒绝下标访问。"""
+        raise ValueError("不允许下标访问")
+
+    def visit_Call(self, node: ast.Call) -> None:
+        """检查函数名是否在白名单内。"""
+        if not isinstance(node.func, ast.Name):
+            raise ValueError("只允许直接调用具名函数")
+        if node.func.id not in _SAFE_FUNCS:
+            raise ValueError(f"不允许的函数: {node.func.id}")
+        self.generic_visit(node)
+
+    def visit_Name(self, node: ast.Name) -> None:
+        """检查名称是否在白名单内。"""
+        if node.id not in _SAFE_FUNCS:
+            raise ValueError(f"不允许的名称: {node.id}")
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """仅放行白名单节点类型，其余一律拒绝。"""
+        if not isinstance(node, _ALLOWED_NODE_TYPES):
+            raise ValueError(f"不允许的表达式节点: {type(node).__name__}")
+        super().generic_visit(node)
+
+
+def _safe_eval(expression: str) -> str:
+    """安全求值数学表达式。
+
+    用 ast.parse 解析后，以白名单节点校验器遍历，拒绝属性访问、下标、
+    import、lambda 等危险结构；校验通过后再 compile + eval 求值，
+    globals 仅含 ``__builtins__: {}``，locals 仅含白名单函数。
+
+    Args:
+        expression: 数学表达式字符串，如 ``"2+3*4"``、``"sin(pi/2)"``。
+
+    Returns:
+        求值结果的字符串形式。
+
+    Raises:
+        ValueError: 表达式含非法节点或非法名称时。
+        SyntaxError: 表达式语法错误时。
+    """
+    tree = ast.parse(expression, mode="eval")
+    _SafeNodeChecker().visit(tree)
+    return str(
+        eval(  # noqa: S307 - 已用 ast 白名单校验节点 + 空 builtins
+            compile(tree, "<safe_eval>", "eval"),
+            {"__builtins__": {}},
+            _SAFE_FUNCS,
+        )
+    )
+
 
 def calculator(expression: str) -> str:
-    """数学计算"""
+    """数学计算（基于 ast 安全解析，禁止属性访问/import 等危险操作）。"""
     safe_expr = expression.replace("^", "**").replace("×", "*").replace("÷", "/")
-    allowed = {
-        "sin": math.sin,
-        "cos": math.cos,
-        "tan": math.tan,
-        "sqrt": math.sqrt,
-        "log": math.log,
-        "log10": math.log10,
-        "pi": math.pi,
-        "e": math.e,
-        "abs": abs,
-        "round": round,
-        "min": min,
-        "max": max,
-        "sum": sum,
-    }
     try:
-        result = eval(safe_expr, {"__builtins__": {}}, allowed)
+        result = _safe_eval(safe_expr)
         return f"{expression} = {result}"
     except Exception as e:
         return f"计算错误: {e}"
@@ -231,34 +329,43 @@ def python_executor(code: str) -> str:
 # ========== 工具注册表 ==========
 
 
-def unit_converter(value: float, from_unit: str, to_unit: str) -> str:
-    """单位换算（长度/重量/温度）"""
-    # 长度换算（统一到米）
-    length = {
-        "m": 1,
-        "km": 1000,
-        "cm": 0.01,
-        "mm": 0.001,
-        "mile": 1609.34,
-        "ft": 0.3048,
-    }
-    # 重量换算（统一到克）
-    weight = {"g": 1, "kg": 1000, "lb": 453.592, "oz": 28.3495}
+# 长度换算基准（统一到米）
+_LENGTH_UNITS: dict[str, float] = {
+    "m": 1.0,
+    "km": 1000.0,
+    "cm": 0.01,
+    "mm": 0.001,
+    "mile": 1609.34,
+    "ft": 0.3048,
+}
+# 重量换算基准（统一到克）
+_WEIGHT_UNITS: dict[str, float] = {
+    "g": 1.0,
+    "kg": 1000.0,
+    "lb": 453.592,
+    "oz": 28.3495,
+}
 
-    if from_unit in length and to_unit in length:
-        result = value * length[from_unit] / length[to_unit]
-        return f"{value} {from_unit} = {result:.4f} {to_unit}"
-    elif from_unit in weight and to_unit in weight:
-        result = value * weight[from_unit] / weight[to_unit]
-        return f"{value} {from_unit} = {result:.4f} {to_unit}"
-    elif from_unit == "C" and to_unit == "F":
-        result = value * 9 / 5 + 32
-        return f"{value}°C = {result:.1f}°F"
-    elif from_unit == "F" and to_unit == "C":
-        result = (value - 32) * 5 / 9
-        return f"{value}°F = {result:.1f}°C"
-    else:
-        return f"不支持的换算: {from_unit} → {to_unit}"
+
+def _convert_by_ratio(
+    value: float, from_unit: str, to_unit: str, table: dict[str, float]
+) -> str:
+    """按比例换算（长度/重量通用：基准单位换算 → 目标单位）。"""
+    result = value * table[from_unit] / table[to_unit]
+    return f"{value} {from_unit} = {result:.4f} {to_unit}"
+
+
+def unit_converter(value: float, from_unit: str, to_unit: str) -> str:
+    """单位换算（长度/重量/温度）。"""
+    if from_unit in _LENGTH_UNITS and to_unit in _LENGTH_UNITS:
+        return _convert_by_ratio(value, from_unit, to_unit, _LENGTH_UNITS)
+    if from_unit in _WEIGHT_UNITS and to_unit in _WEIGHT_UNITS:
+        return _convert_by_ratio(value, from_unit, to_unit, _WEIGHT_UNITS)
+    if from_unit == "C" and to_unit == "F":
+        return f"{value}°C = {value * 9 / 5 + 32:.1f}°F"
+    if from_unit == "F" and to_unit == "C":
+        return f"{value}°F = {(value - 32) * 5 / 9:.1f}°C"
+    return f"不支持的换算: {from_unit} → {to_unit}"
 
 
 class ToolRegistry:
