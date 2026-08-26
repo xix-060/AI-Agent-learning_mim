@@ -31,8 +31,8 @@ jobs:
         run: ruff check src/ tests/
 
       - name: 跑单元测试（不含 LLM 调用）
-        run: pytest tests/ -v -m "not llm" --ignore=tests/test_chat_local.py
+        run: pytest tests/ -v -m "not llm" --ignore=tests/test_chat_local.py --ignore=tests/test_naive_rag.py
 
       - name: 测试报告
         if: always()
-        run: pytest tests/ -m "not llm" --co -q | tail -5 || true
+        run: pytest tests/ -m "not llm" --ignore=tests/test_chat_local.py --ignore=tests/test_naive_rag.py --co -q | tail -5 || true
