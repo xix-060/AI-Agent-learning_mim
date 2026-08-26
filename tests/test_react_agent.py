@@ -4,6 +4,9 @@ import pytest
 from src.llm_client import LLMClient
 from src.react_agent import ReActAgent, Tool, calculator, fake_search, get_time
 
+# 标记为 LLM 测试：调用真实 LLM API，CI 中跳过（pyproject.toml: -m "not llm"）
+pytestmark = pytest.mark.llm
+
 
 @pytest.fixture(scope="module")
 def agent():

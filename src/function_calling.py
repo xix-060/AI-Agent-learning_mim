@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.llm_client import LLMClient
-from src.tools import TOOLS_SCHEMA, TOOL_MAP
+from src.tools.builtin import create_default_registry
 
 
 class FunctionCallingAgent:
@@ -15,9 +15,10 @@ class FunctionCallingAgent:
 
     def __init__(self):
         self.client = LLMClient()
+        self.registry = create_default_registry()
         self.system_prompt = """你是一个有用的助手。当用户的请求需要使用工具时，必须调用工具，不要自己编造答案。
         可用工具：
-        1. calculate - 数学计算
+        1. calculator - 数学计算
         2. get_current_time - 获取当前时间（注意：涉及"现在几点""当前日期"等问题必须调用此工具，不要自己编造时间）
         3. unit_converter - 单位换算
         如果用户的请求不需要工具（如闲聊、自我介绍），直接用自然语言回答即可。"""
@@ -36,7 +37,7 @@ class FunctionCallingAgent:
         response = self.client.client.chat.completions.create(
             model=self.client.model,
             messages=messages,
-            tools=TOOLS_SCHEMA,
+            tools=self.registry.get_openai_tools_schema(),
             tool_choice="auto",
             temperature=0.0,
         )
@@ -52,12 +53,8 @@ class FunctionCallingAgent:
 
                 print(f"🔧 调⽤⼯具: {func_name}({func_args})")
 
-                # 本地执⾏函数
-                func = TOOL_MAP.get(func_name)
-                if func:
-                    result = func(**func_args)
-                else:
-                    result = f"错误：未知⼯具 {func_name}"
+                # 本地执行工具（registry.execute 内部处理未知工具错误）
+                result = self.registry.execute(func_name, **func_args)
 
                 print(f"📤 ⼯具结果: {result}")
 

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: 安装依赖
+        run: |
+          pip install -r requirements.txt
+          pip install ruff pytest
+
+      - name: Ruff 检查
+        run: ruff check src/ tests/
+
+      - name: 跑单元测试（不含 LLM 调用）
+        run: pytest tests/ -v -m "not llm" --ignore=tests/test_chat_local.py
+
+      - name: 测试报告
+        if: always()
+        run: pytest tests/ -m "not llm" --co -q | tail -5 || true

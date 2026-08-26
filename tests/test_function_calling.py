@@ -3,6 +3,8 @@
 import pytest
 from src.function_calling import FunctionCallingAgent
 
+pytestmark = pytest.mark.llm
+
 
 @pytest.fixture(scope="module")
 def agent():

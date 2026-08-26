@@ -231,6 +231,36 @@ def python_executor(code: str) -> str:
 # ========== 工具注册表 ==========
 
 
+def unit_converter(value: float, from_unit: str, to_unit: str) -> str:
+    """单位换算（长度/重量/温度）"""
+    # 长度换算（统一到米）
+    length = {
+        "m": 1,
+        "km": 1000,
+        "cm": 0.01,
+        "mm": 0.001,
+        "mile": 1609.34,
+        "ft": 0.3048,
+    }
+    # 重量换算（统一到克）
+    weight = {"g": 1, "kg": 1000, "lb": 453.592, "oz": 28.3495}
+
+    if from_unit in length and to_unit in length:
+        result = value * length[from_unit] / length[to_unit]
+        return f"{value} {from_unit} = {result:.4f} {to_unit}"
+    elif from_unit in weight and to_unit in weight:
+        result = value * weight[from_unit] / weight[to_unit]
+        return f"{value} {from_unit} = {result:.4f} {to_unit}"
+    elif from_unit == "C" and to_unit == "F":
+        result = value * 9 / 5 + 32
+        return f"{value}°C = {result:.1f}°F"
+    elif from_unit == "F" and to_unit == "C":
+        result = (value - 32) * 5 / 9
+        return f"{value}°F = {result:.1f}°C"
+    else:
+        return f"不支持的换算: {from_unit} → {to_unit}"
+
+
 class ToolRegistry:
     """工具注册表：统一管理所有工具"""
 
@@ -382,6 +412,25 @@ def create_default_registry() -> ToolRegistry:
             },
             func=lambda query: web_search(query),
         )
+    )
+
+    registry.register(
+        ToolDefinition(
+            name="unit_converter",
+            description="单位换算。支持长度(m,km,cm,mm,mile,ft)、重量(g,kg,lb,oz)、温度(C,F)",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "value": {"type": "number", "description": "要换算的数值"},
+                    "from_unit": {"type": "string", "description": "原始单位"},
+                    "to_unit": {"type": "string", "description": "目标单位"},
+                },
+                "required": ["value", "from_unit", "to_unit"],
+            },
+            func=lambda value, from_unit, to_unit: unit_converter(
+                value, from_unit, to_unit
+            ),
+        ),
     )
 
     return registry

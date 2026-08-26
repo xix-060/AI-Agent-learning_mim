@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+markers = [
+    "llm: 需要调用 LLM API 的测试（CI 中跳过）",
+]
+addopts = "-m 'not llm' --ignore=tests/test_chat_local.py"

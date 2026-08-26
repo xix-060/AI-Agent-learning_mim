@@ -12,6 +12,9 @@ from src.llm_client import LLMClient
 from src.naive_rag.rag import NaiveRAG
 from src.naive_rag.loader import TextChunker
 
+# 标记为 LLM 测试：调用真实 LLM/Embedding API，CI 中跳过（pyproject.toml: -m "not llm"）
+pytestmark = pytest.mark.llm
+
 
 @pytest.fixture(scope="module")
 def rag():
