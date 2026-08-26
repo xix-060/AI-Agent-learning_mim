@@ -161,12 +161,11 @@ def test_model():
     """测试微调后的模型"""
     print("\n🧪 测试微调效果...")
 
-    # 加载 base 模型
+    # 加载 base 模型（不用 device_map="auto"，否则 CPU 上 meta 卸载会和 PEFT 加载 adapter 冲突）
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
     base_model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-        device_map="auto",
         trust_remote_code=True,
     )
 
