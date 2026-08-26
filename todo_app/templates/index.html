@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人 Todo</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --border: #e5e7eb;
+      --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+      --done: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 12px 8px;
+      border-radius: 10px;
+      background: var(--bg);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-tab {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .filter-tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .add-form input,
+    .add-form textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+    }
+
+    .add-form input:focus,
+    .add-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+
+    .add-form textarea {
+      resize: vertical;
+      min-height: 64px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .error-msg {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      border: 1px solid #fecaca;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color 0.15s ease;
+    }
+
+    .task-item:hover {
+      border-color: #c7d2fe;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--done);
+    }
+
+    .task-item.completed .task-desc {
+      color: var(--done);
+    }
+
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .task-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 4px;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>个人 Todo</h1>
+      <p>Flask + SQLite · 原生 JS 单页</p>
+    </header>
+
+    <section class="card stats-bar" aria-label="任务统计">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">总数</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-pending">0</div>
+        <div class="stat-label">进行中</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-completed">0</div>
+        <div class="stat-label">已完成</div>
+      </div>
+    </section>
+
+    <nav class="filter-tabs card" aria-label="状态筛选">
+      <button class="filter-tab active" data-status="all">全部</button>
+      <button class="filter-tab" data-status="pending">进行中</button>
+      <button class="filter-tab" data-status="completed">已完成</button>
+    </nav>
+
+    <section class="card">
+      <div class="section-title">添加任务</div>
+      <form class="add-form" id="add-form">
+        <input type="text" id="title-input" placeholder="任务标题（必填）" maxlength="200">
+        <textarea id="desc-input" placeholder="任务描述（可选）" maxlength="1000"></textarea>
+        <div class="error-msg" id="error-msg"></div>
+        <button type="submit" class="btn btn-primary">添加任务</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="section-title">任务列表</div>
+      <ul class="task-list" id="task-list"></ul>
+      <div class="empty-state" id="empty-state" hidden>暂无任务，添加一条吧 👆</div>
+    </section>
+  </div>
+
+  <script>
+    /** 当前筛选状态 */
+    let currentStatus = "all";
+
+    const taskListEl = document.getElementById("task-list");
+    const emptyStateEl = document.getElementById("empty-state");
+    const errorMsgEl = document.getElementById("error-msg");
+    const addFormEl = document.getElementById("add-form");
+    const titleInputEl = document.getElementById("title-input");
+    const descInputEl = document.getElementById("desc-input");
+
+    /**
+     * 显示或隐藏错误提示。
+     * @param {string} message - 错误信息，空字符串则隐藏。
+     */
+    function showError(message) {
+      if (!message) {
+        errorMsgEl.textContent = "";
+        errorMsgEl.classList.remove("visible");
+        return;
+      }
+      errorMsgEl.textContent = message;
+      errorMsgEl.classList.add("visible");
+    }
+
+    /**
+     * 封装 fetch，统一处理 JSON 响应。
+     * @param {string} url - 请求地址。
+     * @param {RequestInit} options - fetch 选项。
+     * @returns {Promise<{ok: boolean, status: number, data: any}>}
+     */
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...options.headers },
+        ...options,
+      });
+
+      let data = null;
+      if (response.status !== 204) {
+        const text = await response.text();
+        data = text ? JSON.parse(text) : null;
+      }
+
+      return { ok: response.ok, status: response.status, data };
+    }
+
+    /** 拉取并渲染统计数据。 */
+    async function fetchStats() {
+      const { ok, data } = await apiFetch("/api/stats");
+      if (!ok) return;
+
+      document.getElementById("stat-total").textContent = data.total;
+      document.getElementById("stat-pending").textContent = data.pending;
+      document.getElementById("stat-completed").textContent = data.completed;
+    }
+
+    /**
+     * 拉取并渲染任务列表。
+     * @param {string} status - 筛选状态。
+     */
+    async function fetchTasks(status = currentStatus) {
+      const query = status === "all" ? "" : `?status=${status}`;
+      const { ok, data } = await apiFetch(`/api/tasks${query}`);
+      if (!ok) return;
+
+      renderTasks(data);
+    }
+
+    /**
+     * 渲染任务列表 DOM（使用 textContent 防 XSS）。
+     * @param {Array} tasks - 任务数组。
+     */
+    function renderTasks(tasks) {
+      taskListEl.innerHTML = "";
+
+      if (tasks.length === 0) {
+        emptyStateEl.hidden = false;
+        return;
+      }
+
+      emptyStateEl.hidden = true;
+
+      tasks.forEach((task) => {
+        const li = document.createElement("li");
+        li.className = "task-item" + (task.completed ? " completed" : "");
+        li.dataset.id = task.id;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "task-checkbox";
+        checkbox.checked = task.completed;
+        checkbox.addEventListener("change", () => toggleComplete(task.id, checkbox.checked));
+
+        const body = document.createElement("div");
+        body.className = "task-body";
+
+        const titleEl = document.createElement("div");
+        titleEl.className = "task-title";
+        titleEl.textContent = task.title;
+
+        body.appendChild(titleEl);
+
+        if (task.description) {
+          const descEl = document.createElement("div");
+          descEl.className = "task-desc";
+          descEl.textContent = task.description;
+          body.appendChild(descEl);
+        }
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn-danger";
+        deleteBtn.textContent = "删除";
+        deleteBtn.addEventListener("click", () => deleteTask(task.id));
+
+        li.appendChild(checkbox);
+        li.appendChild(body);
+        li.appendChild(deleteBtn);
+        taskListEl.appendChild(li);
+      });
+    }
+
+    /**
+     * 创建新任务。
+     * @param {string} title - 标题。
+     * @param {string} description - 描述。
+     */
+    async function createTask(title, description) {
+      const { ok, status, data } = await apiFetch("/api/tasks", {
+        method: "POST",
+        body: JSON.stringify({ title, description }),
+      });
+
+      if (!ok) {
+        showError(data?.error || "创建失败，请重试");
+        return;
+      }
+
+      showError("");
+      titleInputEl.value = "";
+      descInputEl.value = "";
+      await Promise.all([fetchStats(), fetchTasks()]);
+    }
+
+    /**
+     * 切换任务完成状态。
+     * @param {number} id - 任务 ID。
+     * @param {boolean} completed - 是否完成。
+     */
+    async function toggleComplete(id, completed) {
+      const { ok } = await apiFetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ completed }),
+      });
+
+      if (!ok) return;
+      await Promise.all([fetchStats(), fetchTasks()]);
+    }
+
+    /**
+     * 删除任务并刷新列表。
+     * @param {number} id - 任务 ID。
+     */
+    async function deleteTask(id) {
+      const { ok } = await apiFetch(`/api/tasks/${id}`, { method: "DELETE" });
+      if (!ok) return;
+      await Promise.all([fetchStats(), fetchTasks()]);
+    }
+
+    /** 绑定筛选 Tab 点击事件。 */
+    function bindFilterTabs() {
+      document.querySelectorAll(".filter-tab").forEach((tab) => {
+        tab.addEventListener("click", async () => {
+          document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          currentStatus = tab.dataset.status;
+          await fetchTasks(currentStatus);
+        });
+      });
+    }
+
+    /** 绑定添加表单提交事件。 */
+    function bindAddForm() {
+      addFormEl.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const title = titleInputEl.value.trim();
+        const description = descInputEl.value.trim();
+
+        if (!title) {
+          showError("任务标题不能为空");
+          return;
+        }
+
+        await createTask(title, description);
+      });
+    }
+
+    /** 页面初始化。 */
+    async function init() {
+      bindFilterTabs();
+      bindAddForm();
+      await Promise.all([fetchStats(), fetchTasks()]);
+    }
+
+    init();
+  </script>
+</body>
+</html>
