@@ -16,7 +16,7 @@ Agent 场景的杀手锏：
 问题：用户 prompt 以 "Hi!" 结尾，tokenizer 可能切成 \["Hi", "!"]，
 但约束解码时若强制以 "!" 开头生成，可能拼出非法 token。
 SGLang 的解法：回退 prompt 最后一个 token，让生成阶段重新组合，消除边界伪影。
-适用：结构化输出（JSON/正则约束）时保证语法正确。
+适用：结构化输出（JSON/正则约束）时保证语法正确.
 
 ## 3. 其他特性
 
@@ -43,14 +43,14 @@ Agent 场景的收益（数据见 [vllm-performance.md](./vllm-performance.md) �
 固定约 2206 token 的长 system prompt（工具描述），连发 4 次相同请求：
 
 | 轮次 | 耗时(s) | 较首次降幅 |
-| :--- | :--- | :--- |
-| 1 | 52.05 | -    |
-| 2 | 4.23  | -92% |
-| 3 | 3.88  | -93% |
-| 4 | 3.60  | -93% |
+| :- | :---- | :---- |
+| 1  | 52.05 | -     |
+| 2  | 4.23  | -92%  |
+| 3  | 3.88  | -93%  |
+| 4  | 3.60  | -93%  |
 
 - 首次 52s = 模型冷加载 + Prefill 2206 token（计算密集，CPU 上极慢）+ decode
-- 第二次起骤降到 ~4s：模型已在内存（keep_alive）+ 前缀 KV 复用，Prefill 大幅缩减
+- 第二次起骤降到 \~4s：模型已在内存（keep\_alive）+ 前缀 KV 复用，Prefill 大幅缩减
 
 这正是 Radix Tree 卖点在 Agent 场景的体现：多轮对话 / Few-shot /
 多 Agent 共享 system prompt，前缀命中后 Prefill 几乎归零。SGLang 把所有请求

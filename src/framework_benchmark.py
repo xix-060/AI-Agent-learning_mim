@@ -1,7 +1,7 @@
 """vLLM vs SGLang vs Ollama 对比测试（Agent 负载模拟）。
 
 本机纯 CPU，vLLM/SGLang 需 GPU 起不来，脚本用 try/except 容错跳过，
-只跑能起的后端（Ollama）。有 GPU 时同一脚本可同时对比三框架。
+只跑能起的后端（Ollama）。有 GPU 时同一脚本可同时对比三框架.
 """
 
 import json
