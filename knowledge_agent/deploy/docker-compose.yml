@@ -1,0 +1,68 @@
+# 项目 1（knowledge_agent）生产化容器栈
+name: ka-deploy   # 显式项目名：避免与根 deploy/ 的项目名（目录名）撞车导致容器互相顶替
+#
+# 用法：
+#   docker compose -f knowledge_agent/deploy/docker-compose.yml up -d --build
+#   curl http://localhost:8081/health
+#
+# 端口规划（避开根 deploy/ 全栈的 8080/9090/3000）：
+#   ka-api      8081   RAG Agent API
+#   prometheus  9091   指标抓取
+#   grafana     3001   监控面板（admin/admin）
+#
+# LLM 外置：宿主机 vLLM（.env.prod 场景）或 Ollama（.env.docker 默认），
+# 容器只跑 API + 向量库（Chroma 持久卷）
+services:
+  ka-api:
+    build:
+      context: ../..                      # 仓库根目录
+      dockerfile: knowledge_agent/deploy/ka-api/Dockerfile
+    container_name: ka-api
+    ports:
+      - "8081:8000"
+    env_file:
+      - ../.env.docker                    # 容器网络 LLM 地址等（占位 key，部署前填真实值）
+    volumes:
+      - ka_chroma_data:/app/knowledge_agent/data/chroma_db   # 向量库持久化
+      - ka_uploads:/app/knowledge_agent/data/uploads         # 上传文档持久化
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Linux 兼容；Windows Desktop 自带
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s                   # chromadb 首次初始化较慢
+    networks: [ka-net]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ka-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [ka-net]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ka-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"   # 学习环境，生产请改
+    volumes:
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ka_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks: [ka-net]
+
+volumes:
+  ka_chroma_data:
+  ka_uploads:
+  ka_grafana_data:
+
+networks:
+  ka-net:
+    driver: bridge

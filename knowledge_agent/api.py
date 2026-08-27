@@ -18,10 +18,39 @@ import os  # noqa: E402
 import time  # noqa: E402
 import json  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
+from prometheus_client import Counter, Histogram, make_asgi_app  # noqa: E402
 
 load_dotenv()
 
 app = FastAPI(title="知识库 Agent API", version="1.0.0")
+
+# ========== Prometheus 指标 ==========
+REQUEST_COUNT = Counter(
+    "ka_requests_total", "HTTP 请求总数", ["method", "path", "status"]
+)
+LATENCY = Histogram(
+    "ka_request_latency_seconds",
+    "请求延迟（秒）",
+    ["path"],
+    buckets=(0.5, 1, 2, 5, 10, 30, 60, 120, 300),
+)
+LLM_TOKENS = Counter(
+    "ka_llm_tokens_total", "LLM 输出 token 总数（中文按 2 字符/token 估算）", ["path"]
+)
+
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    """记录每个请求的计数与延迟"""
+    start = time.perf_counter()
+    response = await call_next(request)
+    path = request.url.path
+    REQUEST_COUNT.labels(request.method, path, response.status_code).inc()
+    LATENCY.labels(path).observe(time.perf_counter() - start)
+    return response
+
+
+app.mount("/metrics", make_asgi_app())  # Prometheus 抓取端点
 
 
 # ========== 初始化 Agent ==========
@@ -86,6 +115,7 @@ async def chat(req: ChatRequest):
         start = time.time()
         response = agent.chat(req.message, req.session_id)
         elapsed = time.time() - start
+        LLM_TOKENS.labels("/chat").inc(max(1, len(response) // 2))  # 中文近似估算
 
         return ChatResponse(
             response=response,
@@ -115,9 +145,11 @@ async def import_document(req: ImportRequest):
 async def upload_document(file: UploadFile = File(...)):
     """上传文档"""
     try:
-        upload_dir = "data/uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = os.path.join(upload_dir, file.filename)
+        # 用 config 的绝对路径（容器内 CWD 不同于本地，相对路径会写错位置）
+        from knowledge_agent.src.config import UPLOAD_DIR
+
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        file_path = str(UPLOAD_DIR / file.filename)
 
         with open(file_path, "wb") as f:
             content = await file.read()

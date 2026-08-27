@@ -1,0 +1,13 @@
+# knowledge_agent 监控抓取配置：5s 间隔
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "ka-api"
+    static_configs:
+      - targets: ["ka-api:8000"]   # compose 网络内服务名
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]   # 自监控
