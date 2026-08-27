@@ -11,13 +11,14 @@
 
 ### 1️⃣ Vibe Coding（会用，但知道只适合 Demo）
 
-用 AI 直接生成 [todo_app/](file:///e:/git/AI-Agent-learning_mim/todo_app)（Flask + SQLite + 标签功能），一轮就跑起来。体会到它的甜：快、零门槛。也吃到它的苦：第二轮加"标签"功能时 AI 自由发挥、边界乱窜——于是同一天切到 Spec 驱动重做了一遍（[todo_app/SPEC_TAGS.md](file:///e:/git/AI-Agent-learning_mim/todo_app/SPEC_TAGS.md)）。
+用 AI 直接生成 [todo\_app/](file:///e:/git/AI-Agent-learning_mim/todo_app)（Flask + SQLite + 标签功能），一轮就跑起来。体会到它的甜：快、零门槛。也吃到它的苦：第二轮加"标签"功能时 AI 自由发挥、边界乱窜——于是同一天切到 Spec 驱动重做了一遍（[todo\_app/SPEC\_TAGS.md](file:///e:/git/AI-Agent-learning_mim/todo_app/SPEC_TAGS.md)）。
 
 **结论**：Vibe 适合原型/一次性脚本，**正经功能别用**。
 
 ### 2️⃣ Spec 驱动（主力工作流，本周的核心）
 
 把 Day 3 的 Spec 流程真正落进项目：
+
 - 写 [refactor-spec.md](file:///e:/git/AI-Agent-learning_mim/docs/refactor-spec.md)：背景基线 + 范围（做什么/不做什么）+ 4 项验收 checklist + 量化目标 + 失败回退。
 - AI 按 checklist 分步实现，每项改完跑对应测试再进下一项。
 - 量化验收写进 [refactor-report.md](file:///e:/git/AI-Agent-learning_mim/docs/refactor-report.md)：eval 2→0、测试 45→66、diff +248/-204。
@@ -26,9 +27,10 @@
 
 ### 3️⃣ 多智能体协作（理解适用边界：自评不可靠，需 CI 兜底）
 
-写了 [multi_agent_dev.py](file:///e:/git/AI-Agent-learning_mim/src/multi_agent_dev.py)：PM → Coder → Tester 三角分工， Tester 跑 pytest 拿 PASS/FAIL 回传。
+写了 [multi\_agent\_dev.py](file:///e:/git/AI-Agent-learning_mim/src/multi_agent_dev.py)：PM → Coder → Tester 三角分工， Tester 跑 pytest 拿 PASS/FAIL 回传。
 
 **踩到的边界**：
+
 - Tester 用 `"PASS" in review` 子串匹配 → "PASSED with errors" 也判过 → 必须精确匹配 `"结论：PASS"`。
 - LLM 自评不可信（呼应 [cicd-notes.md](file:///e:/git/AI-Agent-learning_mim/docs/cicd-notes.md) 的结论）：多智能体的"验收"必须有客观裁判（CI/pytest），不能让 LLM 自己说"通过了"。
 
@@ -40,17 +42,17 @@
 
 ### 规则层（.cursor/rules + .trae/rules 双份同步）
 
-| 规则 | 作用 |
-| :--- | :--- |
-| [project.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/project.md) | 项目硬约束（Python 3.11、类型注解、pathlib、Conventional Commits） |
-| [agent-dev.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/agent-dev.md) | Agent 开发规范（globs 匹配 `**/agent*.py`） |
-| [ai-coding-playbook.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/ai-coding-playbook.md) | 作战手册：流程铁律 + 喂上下文套路 + 已知坑 + 验收标准 |
+| 规则                                                                                              | 作用                                                   |
+| :---------------------------------------------------------------------------------------------- | :--------------------------------------------------- |
+| [project.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/project.md)                       | 项目硬约束（Python 3.11、类型注解、pathlib、Conventional Commits） |
+| [agent-dev.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/agent-dev.md)                   | Agent 开发规范（globs 匹配 `**/agent*.py`）                  |
+| [ai-coding-playbook.md](file:///e:/git/AI-Agent-learning_mim/.trae/rules/ai-coding-playbook.md) | 作战手册：流程铁律 + 喂上下文套路 + 已知坑 + 验收标准                      |
 
 > Trae 用 `.md`、Cursor 用 `.mdc`，frontmatter 字段兼容，两份同步维护。
 
 ### 模板层
 
-- [templates/SPEC_TEMPLATE.md](file:///e:/git/AI-Agent-learning_mim/templates/SPEC_TEMPLATE.md)：新功能先写 SPEC 的骨架。
+- [templates/SPEC\_TEMPLATE.md](file:///e:/git/AI-Agent-learning_mim/templates/SPEC_TEMPLATE.md)：新功能先写 SPEC 的骨架。
 - [refactor-spec.md](file:///e:/git/AI-Agent-learning_mim/docs/refactor-spec.md)：SPEC 的实战样例（可当二次模板）。
 
 ### 知识层
@@ -69,10 +71,11 @@
 本周三次实证：
 
 1. **Todo App 加标签**：Vibe 模式 AI 乱改边界 → 改用 Spec 模式，把"做什么/不做什么/验收"写清 → 一次过。AI 还是那个 AI，差别在我。
-2. **工具模块重构**：先 review 列 5 类问题，再写 spec 把"前三项"框死范围 + checklist → AI 80 分钟搞定，零返工。没有 spec，AI 会顺手改 langgraph/react_agent 的 eval，改动扩散、不可控。
+2. **工具模块重构**：先 review 列 5 类问题，再写 spec 把"前三项"框死范围 + checklist → AI 80 分钟搞定，零返工。没有 spec，AI 会顺手改 langgraph/react\_agent 的 eval，改动扩散、不可控。
 3. **CI 红灯绿灯**：故意写必挂测试 push → 红灯 13s 出结果。本地绿、远端红（UTF-16 编码、缺依赖）的"环境差异"是头号杀手——**不信 AI 汇报"测试通过了"，必须自己跑 pytest，且要在干净环境跑**。
 
 衍生认知：
+
 - **小步 commit 是回滚的底气**：AI 改坏了 `git checkout -- <file>` 单文件回退，所以每完成一步就 commit（playbook 铁律 3）。
 - **上下文会越拖越脏**：长会话后半段质量明显下降，40 分钟换新会话（playbook 已知坑 4）。
 - **喂上下文要精准**：改哪个文件 @ 哪个文件，不整目录乱喂——否则 AI 抓不住重点。
@@ -83,13 +86,13 @@
 
 ### 🎯 预习清单
 
-| 概念 | 是什么 | 我现在的理解（待验证） |
-| :--- | :--- | :--- |
-| vLLM | 高吞吐 LLM 推理引擎 | PagedAttention 减少显存碎片，提升并发 |
-| SGLang | 推理引擎 + 编程框架 | 比 vLLM 更激进的结构化生成优化 |
-| QPS | 每秒请求数 | 吞吐上限指标 |
-| P99 延迟 | 99 分位响应时间 | 长尾用户体验指标，比平均值更诚实 |
-| TTFT | 首 token 延迟 | 流式场景体感最关键的指标 |
+| 概念     | 是什么          | 我现在的理解（待验证）                |
+| :----- | :----------- | :------------------------- |
+| vLLM   | 高吞吐 LLM 推理引擎 | PagedAttention 减少显存碎片，提升并发 |
+| SGLang | 推理引擎 + 编程框架  | 比 vLLM 更激进的结构化生成优化         |
+| QPS    | 每秒请求数        | 吞吐上限指标                     |
+| P99 延迟 | 99 分位响应时间    | 长尾用户体验指标，比平均值更诚实           |
+| TTFT   | 首 token 延迟   | 流式场景体感最关键的指标               |
 
 ### 💡 想搞清楚的问题
 
@@ -100,12 +103,12 @@
 
 ### 🔗 前置知识（本周已具备）
 
-| 下周需要 | 本周学的 | 关联 |
-| :--- | :--- | :--- |
-| 模型服务化 | Todo App 的 Flask API | 都是 HTTP 服务，部署套路可迁移 |
-| 压测脚本 | CI 的 pytest 自动化 | 自动化思维一致 |
-| 性能观测 | CI 红绿灯 + 耗时记录 | 指标思维可迁移 |
-| LoRA adapter 加载 | 第 7 周 PeftModel | 推理路径已知 |
+| 下周需要            | 本周学的                 | 关联                 |
+| :-------------- | :------------------- | :----------------- |
+| 模型服务化           | Todo App 的 Flask API | 都是 HTTP 服务，部署套路可迁移 |
+| 压测脚本            | CI 的 pytest 自动化      | 自动化思维一致            |
+| 性能观测            | CI 红绿灯 + 耗时记录        | 指标思维可迁移            |
+| LoRA adapter 加载 | 第 7 周 PeftModel      | 推理路径已知             |
 
 ***
 
@@ -113,18 +116,18 @@
 
 ### 提交记录（10 个 Commit）
 
-| Commit | 核心产出 | 类型 |
-| :--- | :--- | :--- |
-| f426990 | Cursor 深度配置（rules 三份 + 技巧库 + logger） | feat |
-| 0a59a21 | AI 辅助开发 Todo 应用（Flask + SQLite） | feat |
-| 88fb378 | Spec 驱动开发实战（标签功能）+ SPEC 模板 | feat |
-| 984787b | AI 编程最佳实践 + 多智能体协作开发实验 | feat |
-| 2a44fb8 | GitHub Actions 配置 + LLM 测试标记 | ci |
-| 72624dd | 故意失败的冒烟测试（演示 CI 红灯） | test |
-| c24a9c1 | requirements.txt 改 UTF-8 + 忽略 test_naive_rag | fix(ci) |
-| 602509b | 修复 test_ci_smoke 冒烟测试（演示 CI 绿灯） | fix |
-| 1a2584a | GitHub Actions 自动化流水线（lint + 测试） | ci |
-| 643a466 | AI 辅助重构工具模块 + 沉淀编程手册 | refactor |
+| Commit  | 核心产出                                           | 类型       |
+| :------ | :--------------------------------------------- | :------- |
+| f426990 | Cursor 深度配置（rules 三份 + 技巧库 + logger）           | feat     |
+| 0a59a21 | AI 辅助开发 Todo 应用（Flask + SQLite）                | feat     |
+| 88fb378 | Spec 驱动开发实战（标签功能）+ SPEC 模板                     | feat     |
+| 984787b | AI 编程最佳实践 + 多智能体协作开发实验                         | feat     |
+| 2a44fb8 | GitHub Actions 配置 + LLM 测试标记                   | ci       |
+| 72624dd | 故意失败的冒烟测试（演示 CI 红灯）                            | test     |
+| c24a9c1 | requirements.txt 改 UTF-8 + 忽略 test\_naive\_rag | fix(ci)  |
+| 602509b | 修复 test\_ci\_smoke 冒烟测试（演示 CI 绿灯）              | fix      |
+| 1a2584a | GitHub Actions 自动化流水线（lint + 测试）               | ci       |
+| 643a466 | AI 辅助重构工具模块 + 沉淀编程手册                           | refactor |
 
 ### 新增/改动文件树
 
@@ -167,16 +170,16 @@ templates/SPEC_TEMPLATE.md      # 新：SPEC 骨架
 
 ## 6. 本周踩坑沉淀（已进项目记忆）
 
-| 坑 | 教训 |
-| :--- | :--- |
-| `ruff` / `gh` 不在 PATH | 用 `python -m ruff`；gh 改用浏览器截图 Actions 页面 |
-| `requirements.txt` UTF-16 编码 | Linux pip 解析失败 → 改 UTF-8（CI 红灯 #1 根因） |
-| `test_naive_rag` 依赖 numpy/pdfplumber 未进 requirements | CI 里 `--ignore`，或补依赖 |
-| 工具名漂移 `calculate` vs `calculator` | tools.py 是死代码 → 删除对齐；prompt 与 registry 名必须一致 |
-| `multi_agent_dev` PASS 子串匹配误判 | `"PASS" in review` → `"结论：PASS"` 精确匹配 |
-| `eval({"__builtins__":{}})` 不能防沙箱逃逸 | `().__class__.__bases__` 可逃逸 → ast 白名单节点校验 |
-| `isinstance(x, frozenset)` 报错 | 第二参数必须是 type / tuple of types，不能用 frozenset |
-| LLM 自评"测试通过了"不可信 | 必须自己跑 pytest，CI 是客观裁判 |
+| 坑                                                    | 教训                                           |
+| :--------------------------------------------------- | :------------------------------------------- |
+| `ruff` / `gh` 不在 PATH                                | 用 `python -m ruff`；gh 改用浏览器截图 Actions 页面     |
+| `requirements.txt` UTF-16 编码                         | Linux pip 解析失败 → 改 UTF-8（CI 红灯 #1 根因）        |
+| `test_naive_rag` 依赖 numpy/pdfplumber 未进 requirements | CI 里 `--ignore`，或补依赖                         |
+| 工具名漂移 `calculate` vs `calculator`                    | tools.py 是死代码 → 删除对齐；prompt 与 registry 名必须一致 |
+| `multi_agent_dev` PASS 子串匹配误判                        | `"PASS" in review` → `"结论：PASS"` 精确匹配        |
+| `eval({"__builtins__":{}})` 不能防沙箱逃逸                  | `().__class__.__bases__` 可逃逸 → ast 白名单节点校验   |
+| `isinstance(x, frozenset)` 报错                        | 第二参数必须是 type / tuple of types，不能用 frozenset  |
+| LLM 自评"测试通过了"不可信                                     | 必须自己跑 pytest，CI 是客观裁判                        |
 
 ***
 
@@ -191,9 +194,8 @@ templates/SPEC_TEMPLATE.md      # 新：SPEC 骨架
 
 ### ⚠️ 需要改进
 
-1. **单日信息密度过高**：10 个 commit 全挤在 08-26 一天，复盘时回溯吃力。下周应分散到多日，每天留简短日志。
-2. **量化指标偏代码侧**：本周量化了 eval/测试/lint，但没量化"Spec 写多长 → AI 一次通过率"。下周可记录 spec 字数 vs 返工次数。
-3. **压测/部署完全空白**：下周进入部署与高并发，目前对 vLLM/SGLang 只有概念印象，需尽早动手跑一次。
+1. **量化指标偏代码侧**：本周量化了 eval/测试/lint，但没量化"Spec 写多长 → AI 一次通过率"。下周可记录 spec 字数 vs 返工次数。
+2. **压测/部署完全空白**：下周进入部署与高并发，目前对 vLLM/SGLang 只有概念印象，需尽早动手跑一次。
 
 ### 🎯 下周期待
 
@@ -203,5 +205,5 @@ templates/SPEC_TEMPLATE.md      # 新：SPEC 骨架
 
 ***
 
-**文档生成**: 2026-08-26
+**文档生成**: 2026-08-30
 **下周目标**: 部署与高并发（vLLM / SGLang / QPS / P99 / 压测）
