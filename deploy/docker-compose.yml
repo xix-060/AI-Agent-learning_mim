@@ -1,0 +1,73 @@
+# 全栈部署：agent-api + ollama + prometheus + grafana
+#
+# 用法：
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   # 首次启动后拉模型（CPU 环境建议 0.5b）：
+#   docker compose -f deploy/docker-compose.yml exec ollama ollama pull qwen2.5:0.5b
+#   # 访问：API http://localhost:8080  Prometheus http://localhost:9090  Grafana http://localhost:3000
+services:
+  agent-api:
+    build:
+      context: ..                      # 仓库根目录（Dockerfile 里 COPY 相对它）
+      dockerfile: deploy/agent-api/Dockerfile
+    container_name: agent-api
+    ports:
+      - "8080:8000"                    # 对外保持 8080，与压测脚本一致
+    environment:
+      ASYNC_BACKEND: "ollama"          # 容器内默认走 ollama 服务；vllm/sglang 预设仍保留
+      ASYNC_LLM_BASE_URL: "http://ollama:11434/v1"   # 覆盖预设：容器网络内主机名
+    depends_on:
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [agent-net]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_models:/root/.ollama    # 模型缓存持久化，重启不重新下载
+    networks: [agent-net]
+    # 纯 CPU 运行；有 GPU 时取消注释：
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [agent-net]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"   # 学习环境，生产请改
+    volumes:
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks: [agent-net]
+
+volumes:
+  ollama_models:
+  grafana_data:
+
+networks:
+  agent-net:
+    driver: bridge

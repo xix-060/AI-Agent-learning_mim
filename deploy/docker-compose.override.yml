@@ -1,0 +1,7 @@
+# 本机快速验证用 override：跳过容器 ollama，直连主机已装好的 Ollama
+# （docker compose 会自动合并同目录的 docker-compose.override.yml）
+# 正式全栈容器化部署时删除本文件，让 agent-api 走 ollama 服务名即可
+services:
+  agent-api:
+    environment:
+      ASYNC_LLM_BASE_URL: "http://host.docker.internal:11434/v1"

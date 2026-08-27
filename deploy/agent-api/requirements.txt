@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn>=0.30
+openai>=1.40
+python-dotenv>=1.0
+prometheus-client>=0.20
