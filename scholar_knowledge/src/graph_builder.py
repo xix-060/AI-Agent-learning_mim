@@ -29,8 +29,11 @@ class ScholarGraph:
     # ===== 查询能力 =====
 
     def get_entity_name(self, entity_id: str) -> str:
-        """根据 id 取实体名"""
-        return self.G.nodes[entity_id].get("name", entity_id)
+        """根据 id 取实体名；未知 id 回退为 id 本身。"""
+        try:
+            return self.G.nodes[entity_id].get("name", entity_id)
+        except KeyError:
+            return entity_id
 
     def find_entity_by_name(self, name: str) -> list[str]:
         """按名字找实体 id（模糊匹配）"""
