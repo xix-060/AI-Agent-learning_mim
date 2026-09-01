@@ -4,7 +4,7 @@ import time
 import httpx
 import asyncio
 
-API = "http://localhost:8080"
+API = "http://127.0.0.1:8080"  # Windows 下 localhost 先解析 IPv6，会命中 wslrelay 黑洞，必须用 127.0.0.1
 
 
 def sync_way(n: int = 10):
