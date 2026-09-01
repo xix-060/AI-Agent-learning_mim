@@ -14,6 +14,6 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
         args: ["--maxkb=500"]
-        # Locust HTML 报告为可再生工件（内嵌 JSON 图表数据），单独放行
-        exclude: ^src/loadtest/report\.html$
+        # 可再生演示工件（图表/报告），体积大但可脚本重现，单独放行
+        exclude: ^(src/loadtest/report\.html|scholar_knowledge/docs/graph.*\.png)$
       - id: check-merge-conflict
