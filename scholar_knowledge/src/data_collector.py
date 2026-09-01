@@ -169,7 +169,9 @@ def build_graph_data(
 
 
 def save_scholar_data(
-    output_path: str = "scholar_knowledge/data/scholar_data.json",
+    output_path: str | Path = Path(__file__).resolve().parent.parent
+    / "data"
+    / "scholar_data.json",
     enrich: bool = False,
 ) -> dict:
     """保存图谱数据到 JSON。

@@ -31,14 +31,15 @@ class GraphRAG:
 
     # ===== 图谱检索 =====
 
-    def retrieve_graph_evidence(self, query: str, max_evidence: int = 20) -> list[str]:
-        """从图谱检索证据（实体定位 + 邻居扩展）。
+    def retrieve_graph_evidence(self, query: str, max_evidence: int = 40) -> list[str]:
+        """从图谱检索证据（实体定位 + 邻居扩展 + 引用 2 跳扩展）。
 
         改进：
           - 动态扫描图谱所有实体名做匹配，不依赖硬编码关键词列表
           - 同名实体优先论文类型（避免"ReAct"命中关键词节点而非论文节点）
           - evidence 同时取出边（出）和入边（被引/被 authored），
             覆盖"XX 论文引用了哪些论文"等入边问题
+          - 论文实体额外做引用 2 跳扩展（p6→p3→p1），支撑"引用链"类多跳问题
           - evidence 标注实体类型，让 LLM 区分同名不同类型实体
         """
         evidence: list[str] = []
@@ -62,6 +63,7 @@ class GraphRAG:
                 kept_ids.append(nid)
 
         # 2. 从每个实体扩展邻居（同时取出边 + 入边，覆盖"被引"等问题）
+        hop2_done: set[str] = set()  # 已做 2 跳扩展的论文，避免重复
         for eid in kept_ids:
             if eid not in self.graph.G:
                 continue
@@ -76,6 +78,20 @@ class GraphRAG:
                 evidence.append(
                     f"  -{rel}-> [{v_type}] {self.graph.get_entity_name(v)}"
                 )
+                # 引用 2 跳扩展：论文 A -引用-> B 时，补充 B 的引用对象（A→B→C）
+                if (
+                    rel == "引用"
+                    and v_type == "论文"
+                    and v not in hop2_done
+                    and v not in kept_ids
+                ):
+                    hop2_done.add(v)
+                    for _, v2, attrs2 in self.graph.G.out_edges(v, data=True):
+                        if attrs2.get("relation") == "引用":
+                            evidence.append(
+                                f"  -引用(2跳)-> [{self.graph.G.nodes[v2].get('type', '')}]"
+                                f" {self.graph.get_entity_name(v2)}"
+                            )
             # 入边：u -rel-> eid（用户问"XX 引用了谁"时，被引方向是入边）
             for u, _, attrs in self.graph.G.in_edges(eid, data=True):
                 rel = attrs.get("relation", "")
@@ -83,6 +99,23 @@ class GraphRAG:
                 evidence.append(
                     f"  <-{rel}- [{u_type}] {self.graph.get_entity_name(u)}"
                 )
+                # 关键词实体的入边论文做 2 跳扩展：kw_react ← p3 时，
+                # 补充 p3 的引用/关键词边（问题里通常只有短词，论文全名匹配不上，
+                # 若不扩展则 p3 的引用链永远进不了证据）
+                if (
+                    node_type == "关键词"
+                    and u_type == "论文"
+                    and u not in hop2_done
+                    and u not in kept_ids
+                ):
+                    hop2_done.add(u)
+                    for _, v2, attrs2 in self.graph.G.out_edges(u, data=True):
+                        rel2 = attrs2.get("relation", "")
+                        if rel2 in ("引用", "关键词"):
+                            evidence.append(
+                                f"  -{rel2}(2跳)-> [{self.graph.G.nodes[v2].get('type', '')}]"
+                                f" {self.graph.get_entity_name(v2)}"
+                            )
 
         return evidence[:max_evidence]
 
@@ -122,9 +155,12 @@ class GraphRAG:
         if verbose:
             print(f"  [图谱证据 {len(graph_evidence)} 条]")
 
-        # 3. 构造 prompt 给 LLM
-        prompt = f"""你是一个学术知识图谱问答助手。请基于以下从知识图谱检索到的结构化证据回答问题。
-如果证据不足，明确说明"图谱中缺乏相关信息"。
+        # 3. 构造 prompt 给 LLM（严格基于证据 + 强制引用原文实体名/关系名）
+        prompt = f"""你是学术知识图谱问答助手。请严格遵守以下规则回答问题：
+1. 只使用【图谱证据】中出现的信息，禁止使用你自己的知识补充图谱中没有的论文、作者或关系。
+2. 回答中必须**逐字引用**证据里出现的实体名（论文标题/作者名/关键词原文）和关系名（如"引用"、"作者"、"关键词"）。
+3. 问"哪些/有哪些/涉及哪些"时，把证据中列出的相关实体**全部列出**，不要遗漏、不要缩写（用证据中的完整名称）。
+4. 如果证据不足以回答，明确说明"图谱中缺乏相关信息"。
 
 【图谱证据】
 {chr(10).join(graph_evidence) if graph_evidence else "（无直接图谱证据）"}

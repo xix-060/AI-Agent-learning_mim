@@ -5,11 +5,17 @@ from pathlib import Path
 import networkx as nx
 import matplotlib.pyplot as plt
 
+# 文件相对默认路径：无论从哪个 CWD 启动（如 streamlit 从 scholar_knowledge/ 启动）都正确
+_DEFAULT_DATA_PATH = (
+    Path(__file__).resolve().parent.parent / "data" / "scholar_data.json"
+)
+_DEFAULT_IMG_PATH = Path(__file__).resolve().parent.parent / "docs" / "graph.png"
+
 
 class ScholarGraph:
     """学术知识图谱"""
 
-    def __init__(self, data_path="scholar_knowledge/data/scholar_data.json"):
+    def __init__(self, data_path: str | Path = _DEFAULT_DATA_PATH):
         self.data = json.loads(Path(data_path).read_text(encoding="utf-8"))
         self.G = nx.MultiDiGraph()
         self._build()
@@ -116,7 +122,7 @@ class ScholarGraph:
 
     def visualize(
         self,
-        output_path: str = "scholar_knowledge/docs/graph.png",
+        output_path: str | Path = _DEFAULT_IMG_PATH,
         max_nodes: int = 50,
         k: float = 2.0,
         figsize: tuple[float, float] = (16, 12),
