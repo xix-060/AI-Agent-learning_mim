@@ -38,6 +38,12 @@ BASE_EVAL = [
 ]
 
 # 模板扩充素材：论文标题/作者名取自 scholar_data.json 中真实实体，保证 kw 可命中
+# 注意（第 10 周错误分析结论）：
+#   1. 只能放图谱中真实存在的论文（38 篇内）。Toolformer / Self-Consistency
+#      曾被误放入列表，生成的 4 条模板题在图谱中零证据，全数失分——评测集
+#      只应测图谱覆盖范围内的知识（已从 data/eval_set.json 移除这 4 条）。
+#   2. 短名（BERT/CoT/ToT）与图谱全标题实体的匹配盲区已由 graph_rag.py
+#      的"首词前缀反向匹配"修复，短名可保留。
 _PAPERS = [
     "Attention Is All You Need",
     "BERT",
@@ -47,8 +53,6 @@ _PAPERS = [
     "LoRA",
     "GraphRAG",
     "Tree of Thoughts",
-    "Toolformer",
-    "Self-Consistency",
 ]
 _AUTHORS = ["Vaswani", "Devlin", "Yao", "Lewis", "Wei", "Hu", "Zhang", "Gao"]
 

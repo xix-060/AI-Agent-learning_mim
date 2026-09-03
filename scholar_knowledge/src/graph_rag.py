@@ -46,10 +46,23 @@ class GraphRAG:
         query_lower = query.lower()
 
         # 1. 定位实体：动态匹配图谱所有实体名，按类型优先级排序（论文 > 作者 > 关键词 > 会议）
+        #    双向匹配：正向"实体名出现在问题里" + 反向"问题英文短词命中实体名首词"
+        #    （"BERT" → "BERT: Pre-training..."），解决评测模板用短名、
+        #    图谱存全标题导致的匹配盲区（bad_cases.md 数据失败 6 条的根因）
         type_priority = {"论文": 0, "作者": 1, "关键词": 2, "会议": 3}
         matched: list[tuple[int, str]] = []
+        # 提取问题中的英文 token（含连字符，≥4 字符），用于反向前缀匹配
+        q_tokens = set(re.findall(r"[a-zA-Z][a-zA-Z-]{3,}", query_lower))
         for nid, name in self._entity_names:
-            if name and name.lower() in query_lower:
+            if not name:
+                continue
+            name_lower = name.lower()
+            hit = name_lower in query_lower
+            if not hit and q_tokens:
+                # 反向：实体名首个单词与问题 token 做前缀匹配
+                first_word = re.sub(r"[^\w-]", "", name_lower.split()[0])
+                hit = any(first_word.startswith(t) for t in q_tokens)
+            if hit:
                 node_type = self.graph.G.nodes[nid].get("type", "")
                 matched.append((type_priority.get(node_type, 9), nid))
         matched.sort()
