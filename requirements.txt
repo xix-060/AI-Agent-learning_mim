@@ -7,14 +7,16 @@ charset-normalizer==3.4.9
 click==8.4.2
 colorama==0.4.6
 distro==1.9.0
+flask==3.1.0
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1
 idna==3.18
 iniconfig==2.3.0
 jiter==0.16.0
+matplotlib==3.11.0
 mypy_extensions==1.1.0
-flask==3.1.0
+networkx==3.6.1
 openai==2.44.0
 packaging==26.0
 pathspec==1.1.1
