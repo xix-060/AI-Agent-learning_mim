@@ -1,0 +1,6 @@
+# Paper Vision Agent 依赖
+# 注意：图谱桥接（src/graph_bridge.py）复用 scholar_knowledge 的 ScholarGraph，
+# 需同时安装 scholar_knowledge/requirements.txt 中的 networkx 等依赖。
+openai>=1.0
+python-dotenv>=1.0
+Pillow>=10.0

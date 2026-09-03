@@ -15,5 +15,5 @@ repos:
       - id: check-added-large-files
         args: ["--maxkb=500"]
         # 可再生演示工件（图表/报告），体积大但可脚本重现，单独放行
-        exclude: ^(src/loadtest/report\.html|scholar_knowledge/docs/graph.*\.png)$
+        exclude: ^(src/loadtest/report\.html|scholar_knowledge/docs/graph.*\.png|paper_vision_agent/docs/demo\.gif)$
       - id: check-merge-conflict
