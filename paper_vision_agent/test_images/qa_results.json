@@ -1,0 +1,56 @@
+[
+  {
+    "image": "3_table.png",
+    "question": "这张表格的行和列分别代表什么？",
+    "answer": "表格的行代表不同的模型名称，列分别表示EN-DE和EN-FR的BLEU分数以及EN-DE和EN-FR的训练成本（FLOPs）。",
+    "seconds": 0.9
+  },
+  {
+    "image": "3_table.png",
+    "question": "哪个模型在 EN-DE 上的 BLEU 分数最高？具体是多少？",
+    "answer": "根据表格，Transformer (big) 在 EN-DE 上的 BLEU 分数最高，具体是 28.4。",
+    "seconds": 0.5
+  },
+  {
+    "image": "3_table.png",
+    "question": "Transformer (base model) 比之前最强的 ConvS2S Ensemble 好在哪里？",
+    "answer": "根据表格，Transformer (base model) 在 EN-DE 上的 BLEU 分数为 27.3，而 ConvS2S Ensemble 在 EN-DE 上的 BLEU 分数为 26.36，因此 Transformer (base model) 在 EN-DE 上表现更好。此外，Transformer (base model) 的 EN-DE 训练成本为 3.3 × 10^18，远低于 ConvS2S Ensemble 的 7.7 × 10^19。",
+    "seconds": 1.0
+  },
+  {
+    "image": "1_line_chart.png",
+    "question": "这张图对比了哪些方法？分别用什么颜色表示？",
+    "answer": "这张图对比了以下方法：Standard（蓝色）、CoT（橙色）、Act（绿色）、ReAct（红色）。",
+    "seconds": 0.9
+  },
+  {
+    "image": "1_line_chart.png",
+    "question": "在 540b 模型下，哪种方法表现最好？大约多少分？",
+    "answer": "在 540b 模型下，Act 方法表现最好，大约 35 分。",
+    "seconds": 0.5
+  },
+  {
+    "image": "1_line_chart.png",
+    "question": "ReAct 这种方法出自哪篇论文？它和 Attention 有什么关系？",
+    "answer": "ReAct 方法出自论文《ReAct: Synergizing Reasoning and Acting in Language Models》。  \n它与 Attention 的关系是被引用于《Attention Is All You Need》这篇论文。",
+    "seconds": 0.7
+  },
+  {
+    "image": "2_architecture_transformer.png",
+    "question": "这张图展示的是什么模型的整体架构？",
+    "answer": "这张图展示的是Transformer模型的整体架构。",
+    "seconds": 0.5
+  },
+  {
+    "image": "2_architecture_transformer.png",
+    "question": "图中左右两个堆叠结构分别是什么？各包含哪些组件？",
+    "answer": "图中左右两个堆叠结构分别是编码器（Encoder）和解码器（Decoder）。  \n编码器包含自注意力机制、前馈神经网络以及残差连接和层归一化组件。  \n解码器同样包含自注意力机制、前馈神经网络以及残差连接和层归一化组件。",
+    "seconds": 0.8
+  },
+  {
+    "image": "2_architecture_transformer.png",
+    "question": "Transformer 架构的核心创新是什么？知识库里有相关论文吗？",
+    "answer": "Transformer架构的核心创新是自注意力机制（Self-Attention Mechanism），它允许模型在处理序列数据时关注到不同位置的信息，从而提升对长距离依赖关系的捕捉能力。  \n\n知识库中确实有相关论文，例如《Attention Is All You Need》和《BERT: Pre-training of Deep Bidirectional Transformers》。",
+    "seconds": 0.9
+  }
+]
