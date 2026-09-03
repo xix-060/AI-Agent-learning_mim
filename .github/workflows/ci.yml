@@ -28,7 +28,7 @@ jobs:
           pip install ruff pytest
 
       - name: Ruff 检查
-        run: ruff check src/ tests/
+        run: ruff check src/ tests/ scholar_knowledge/src/ scholar_knowledge/eval/ scholar_knowledge/app.py
 
       - name: 跑单元测试（不含 LLM 调用）
         run: pytest tests/ -v -m "not llm" --ignore=tests/test_chat_local.py --ignore=tests/test_naive_rag.py
