@@ -1,5 +1,6 @@
 """混合 GraphRAG：向量检索 + 图谱检索"""
 
+import re
 import sys
 import time
 from pathlib import Path
@@ -17,6 +18,7 @@ from src.llm_client import LLMClient  # noqa: E402
 from src.models import Message, RoleEnum  # noqa: E402
 from graph_builder import ScholarGraph  # noqa: E402
 from graph_rag import GraphRAG  # noqa: E402
+from query_rewriter import QueryRewriter  # noqa: E402
 
 # DashScope embedding 重试策略：3 次指数退避（1s/2s/4s）
 _EMBED_MAX_RETRIES = 3
@@ -53,6 +55,10 @@ class HybridRAG:
         self.llm = llm
         self.embedder = embedder
         self.graph_rag = GraphRAG(graph, llm)
+        self.rewriter = (
+            QueryRewriter()
+        )  # 查询改写层：口语 → 实体+关系明确的检索友好形式
+        self.last_path: list[str] = []  # 最近一次回答的推理路径（供 UI 溯源展示）
         self._build_vector_index()
 
     def _build_vector_index(self):
@@ -120,14 +126,19 @@ class HybridRAG:
         return graph_evidence, vector_evidence
 
     def query(self, question: str, verbose: bool = False) -> str:
-        """混合问答"""
-        # 结构化优先
-        structural = self.graph_rag.answer_structural(question)
+        """混合问答（查询入口：检索前先过查询改写层）"""
+        # 查询改写：口语 → 规范（实体补全 + 关系显式化）；失败降级原问题
+        rewritten = self.rewriter.rewrite(question)
+        if verbose:
+            print(f"  [改写] {question!r} → {rewritten!r}")
+
+        # 结构化优先（用改写后的问题：实体已补全，规则模式更易命中）
+        structural = self.graph_rag.answer_structural(rewritten)
         if structural:
             return structural
 
-        # 混合检索
-        graph_ev, vector_ev = self.hybrid_search(question)
+        # 混合检索（用改写后的问题检索）
+        graph_ev, vector_ev = self.hybrid_search(rewritten)
         if verbose:
             print(f"  [图谱证据 {len(graph_ev)} 条 + 向量证据 {len(vector_ev)} 条]")
 
@@ -142,9 +153,12 @@ class HybridRAG:
 {chr(10).join(f"- {t}" for t in vector_ev) if vector_ev else "（无）"}
 
 【问题】
-{question}
+{rewritten}
 
-请综合回答，并说明依据了哪类证据。"""
+请综合回答，并说明依据了哪类证据。
+最后单独一行输出推理路径（从你依据的图谱证据中提取关键实体链），
+格式: 路径: 实体A -> 实体B -> 实体C
+若无图谱证据，输出: 路径: 无"""
 
         # simple_chat 不支持 temperature 参数，改用 chat() 直接构造 messages
         messages = [
@@ -155,11 +169,35 @@ class HybridRAG:
             Message(role=RoleEnum.USER, content=prompt),
         ]
         try:
-            return self.llm.chat(messages, temperature=0.2).content
+            answer = self.llm.chat(messages, temperature=0.2).content
         except Exception as e:
             return f"⚠️ LLM 调用失败：{e}\n图谱证据（前 3 条）：\n" + "\n".join(
                 graph_ev[:3]
             )
+        return self._extract_path(answer)
+
+    def _extract_path(self, answer: str) -> str:
+        """从 LLM 回答中拆出推理路径行，存入 self.last_path 并从正文剥离。
+
+        评测口径依赖 query 返回的答案文本：路径行必须剥离，避免路径里的
+        实体名额外命中评测关键词污染命中率；UI 通过 self.last_path 读取。
+
+        Args:
+            answer: LLM 原始回答（末尾含"路径: A -> B -> C"行）
+
+        Returns:
+            剥离路径行后的答案正文
+        """
+        self.last_path = []
+        m = re.search(r"[\s\-*•]*路径[*\s]*[:：]\s*([^\n]*)", answer)
+        if not m:
+            return answer
+        chain = m.group(1).strip()
+        if chain and not chain.startswith("无"):
+            self.last_path = [
+                n.strip().strip("*《》\"' ") for n in chain.split("->") if n.strip()
+            ]
+        return re.sub(r"\n?[\s\-*•]*路径[*\s]*[:：][^\n]*", "", answer, count=1).strip()
 
     # ===== 评测对比 =====
 
