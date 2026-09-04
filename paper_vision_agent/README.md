@@ -17,18 +17,21 @@
 
 ## 工作流
 
-```
-论文图表
-   │
-   ▼
-[视觉模型 GLM-4V] ── 结构化描述 ──┐
-   │                              │
-   ▼                              ▼
-[GraphBridge] ── 实体提取 ──> ScholarGraph 查邻居
-   │                              │
-   │  ◀──── 图谱佐证事实 ◀────────┘
-   ▼
-[LLM DeepSeek] ── system prompt 注入描述+佐证 ──> 多轮问答
+```mermaid
+flowchart TD
+    A[📄 论文图表] --> B[👁️ VisionClient<br/>GLM-4V-Flash]
+    B -->|结构化描述<br/>类型/内容/结论/实体| C[🔗 GraphBridge]
+    C -->|实体提取| D[(📚 ScholarGraph<br/>项目B 知识图谱)]
+    D -->|邻居事实佐证| C
+    C -->|描述+佐证| E[🧠 PaperVisionAgent<br/>DeepSeek LLM]
+    E -->|system prompt 注入| F[💬 多轮问答]
+    F -->|历史累积| E
+
+    style A fill:#fef3c7,stroke:#f59e0b
+    style B fill:#dbeafe,stroke:#3b82f6
+    style D fill:#dcfce7,stroke:#16a34a
+    style E fill:#fce7f3,stroke:#db2777
+    style F fill:#f3e8ff,stroke:#9333ea
 ```
 
 ## 快速开始
