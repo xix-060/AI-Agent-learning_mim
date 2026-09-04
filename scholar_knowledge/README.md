@@ -3,6 +3,10 @@
 > 基于 **NetworkX 图谱 + Chroma 向量** 的混合 GraphRAG，解决纯向量检索答不了的"关系型多跳问题"。
 > **技术栈**：NetworkX · Chroma · DashScope/Qwen · Streamlit · Neo4j（生产方案）
 
+![demo](docs/demo.gif)
+
+> 演示：两跳问题"从 ReAct 论文出发，沿着引用关系两步内能追溯到哪些奠基性论文？" → 答案 + 推理路径逐跳点亮
+
 ---
 
 ## ✨ 核心亮点

@@ -4,6 +4,10 @@
 >
 > **技术栈**：LangGraph · Chroma · Qwen3/DeepSeek · FastAPI · vLLM · Prometheus/Grafana
 
+![demo](docs/demo.gif)
+
+> 演示：知识库状态 → RAG 跨源问答 → 计算器/文件工具调用
+
 ## ✨ 核心亮点
 
 - 🔄 LangGraph 状态机编排（可暂停 / 可恢复 / 人机协同）

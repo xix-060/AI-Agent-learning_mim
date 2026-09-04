@@ -1,0 +1,9 @@
+{
+  "question": "从 ReAct 论文出发，沿着引用关系两步内能追溯到哪些奠基性论文？",
+  "answer": "根据图谱结构化证据，论文《ReAct: Synergizing Reasoning and Acting in Language Models》引用了以下文献：\n\n1. 《Attention Is All You Need》\n2. 《Chain-of-Thought Prompting Elicits Reasoning in LLMs》\n\n进一步地，该论文的引用文献《Attention Is All You Need》被其他文献引用，例如《A Survey on Large Language Model based Autonomous Agents》，而《Chain-of-Thought Prompting Elicits Reasoning in LLMs》也被其他文献引用，如《Federated Prompting and Chain-of-Thought Reasoning for Improving LLMs Answering》。\n\n因此，两步以内的奠基性论文包括：\n\n- 《Attention Is All You Need》\n- 《Chain-of-Thought Prompting Elicits Reasoning in LLMs》\n- 《A Survey on Large Language Model based Autonomous Agents》（作为《Attention Is All You Need》的间接引用）\n- 《Federated Prompting and Chain-of-Thought Reasoning for Improving LLMs Answering》（作为《Chain-of-Thought Prompting Elicits Reasoning in LLMs》的间接引用）\n\n依据：图谱结构化证据（关系路径）和论文文本证据（语义内容）。\n路径: ReAct: Synergizing Reasoning and Acting in Language Models -> Chain-of-Thought Prompting Elicits Reasoning in LLMs -> Federated Prompting and Chain-of-Thought Reasoning for Improving LLMs Answering",
+  "path": [
+    "ReAct: Synergizing Reasoning and Acting in Language Models",
+    "Attention Is All You Need",
+    "A Survey on Large Language Model based Autonomous Agents"
+  ]
+}
